@@ -12,7 +12,7 @@
 
 ## Problem
 
-Sales representatives at franchise businesses need realistic practice against varied buyer personas, but two constraints make this exceptionally hard:
+Sales representatives need realistic practice against varied buyer personas, but two constraints make this exceptionally hard:
 
 1. **Latency budget**: Conversational AI must respond in <1,000ms glass-to-glass; delays beyond 150ms degrade the user experience (ITU standard), and delays beyond 500ms cause "double-talking" that breaks immersion entirely.
 2. **Grading depth vs. speed**: A rubric-based performance evaluation using `o4-mini` takes 5-15 seconds per transcript. Injecting this into a real-time conversation loop is mathematically impossible within the latency budget.
@@ -112,7 +112,7 @@ flowchart LR
 
 ### 2. Rubric Alignment Drift
 
-**Challenge**: Initial calibration testing surfaced gaps against the official rubric: missing OSR criteria, inflated ISR empathy scoring, and other criterion-weighting discrepancies.
+**Challenge**: Initial calibration testing surfaced gaps against the scoring rubric: missing criteria, inflated empathy scoring, and other criterion-weighting discrepancies.
 
 **Solution**: Full audit and realignment (ADR-008, stakeholder-approved). Expanded OSR from 2-criterion to 4-criterion per category (20 total). Corrected ISR empathy weighting. Created fair-band test transcripts for calibration validation. 199+ pytest tests ensure ongoing alignment.
 
@@ -134,7 +134,7 @@ flowchart LR
 |-----|----------|-----------|
 | ADR-001 | Two-Brain Architecture | Only viable strategy for <1s voice + deep grading |
 | ADR-005 | Universal Envelope Multi-Rubric | Support ISR (90-pt) and OSR (100-pt) rubrics with single schema via `rubric_payload` VARIANT |
-| ADR-008 | Rubric Alignment with Official Sources | Calibration gaps discovered (missing criteria, inflated scores); full realignment with stakeholder approval |
+| ADR-008 | Rubric Calibration | Calibration gaps discovered (missing criteria, inflated scores); full realignment |
 | ADR-010 | ServerVad over SemanticVad | SemanticVad introduced latency regression; ServerVad provides deterministic ms-level turn boundary control |
 | ADR-012 | Interrupt Sensitivity Mapping | Single `interrupt_sensitivity` enum replaces coordinating two VAD parameters per persona |
 | ADR-020 | Half-Cascade Architecture (DragonHD TTS) | Voice gender drift fix: `gpt-realtime` emits text only, Azure DragonHD TTS owns synthesis with deterministic per-persona voice IDs; ~98% per-session cost reduction |
