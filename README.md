@@ -4,9 +4,9 @@
 
 ---
 
-**This repository documents the architecture and design decisions for Pitch Coach AI. Source code is available on request.**
+**This repository documents the architecture and design decisions for Pitch Coach AI. The implementation is private.**
 
-📄 [Portfolio Case Study](https://jamesshehan.dev/projects/pitch-coach-ai) · 📝 [Blog Deep Dive](https://jamesshehan.dev/blog/building-real-time-voice-ai-sales-coach) · 📬 [Request Source Access](mailto:james@jamesshehan.dev?subject=Source%20Access%20Request%20-%20Pitch%20Coach%20AI)
+📄 [Portfolio Case Study](https://jamesshehan.dev/projects/pitch-coach-ai) · 📝 [Blog Post](https://jamesshehan.dev/blog/building-real-time-voice-ai-sales-coach)
 
 ---
 
@@ -169,4 +169,3 @@ See [docs/tech-decisions.md](docs/tech-decisions.md) for detailed ADR excerpts.
 
 **Built by [James Shehan](https://jamesshehan.dev)** · TPM / Solutions Architect
 
-📬 [Request source access](mailto:james@jamesshehan.dev?subject=Source%20Access%20Request%20-%20Pitch%20Coach%20AI)
