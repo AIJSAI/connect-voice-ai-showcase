@@ -6,7 +6,7 @@
 
 ## Context
 
-When I started building Connect in January 2026, the realtime voice models and the ways to reach them were still maturing, and Azure trailed OpenAI by about one realtime model release. Connect's first production stack ran on LiveKit: LiveKit Cloud carried the audio through its media servers to an agent worker, and that worker drove Azure OpenAI's realtime model.
+When I started building Connect, a real-time voice AI sales role-play platform, in January 2026, the realtime voice models and the ways to reach them were still maturing. Connect's first production stack ran on LiveKit: LiveKit Cloud carried the audio through its media servers to an agent worker, and that worker drove Azure OpenAI's realtime model.
 
 That was the right call at the time. It let me build and ship what mattered to the business (the buyer personas, the grader, the pilots) without first solving real-time media transport myself.
 

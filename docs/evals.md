@@ -1,6 +1,6 @@
 # Evals: Connect
 
-In Connect the grader's output is the product: a representative reads the score and decides what to practice next. So the grader is evaluated like a model, continuously, and not only tested like code. The deterministic score tests are on the [testing](testing.md) page; this page covers the evaluations of the model's judgment.
+In Connect, a real-time voice AI sales role-play platform, the grader's output is the product: a representative reads the score and decides what to practice next. So the grader is evaluated like a model, continuously, and not only tested like code. The deterministic score tests are on the [testing](testing.md) page; this page covers the evaluations of the model's judgment.
 
 ---
 
@@ -19,7 +19,7 @@ A required check on every pull request since July 2026.
 
 ## Red-Team Cases
 
-Nine adversarial transcripts run in the same gate, including prompt injection (a representative speaking instructions at the grader) and score manipulation. All nine must hold for the merge to pass. Inside the grader, the transcript is fenced so that what is said in a call is treated as content to grade rather than as instructions.
+Nine adversarial transcripts run in the same gate, including prompt injection (a representative speaking instructions at the grader) and score manipulation. Any case that fails blocks the merge. Inside the grader, the transcript is fenced so that what is said in a call is treated as content to grade rather than as instructions.
 
 ## Calibration Before a Grading Change Goes Live
 
@@ -31,7 +31,7 @@ Four more measures run today but do not block a merge: consistency, coaching qua
 
 ## Model Changes
 
-- **The grading model's successor runs dark as a shadow grader** ahead of the current model's retirement. The cutover is one configuration switch, and a dated alert fires if any grade still runs on the old model close to the retirement date.
+- **The grading model's successor is deployed, with shadow grading built and switched off until it is turned on** ahead of the current model's retirement. The cutover is one configuration switch, and a dated alert fires if any grade still runs on the old model close to the retirement date.
 - **The realtime model** was evaluated through the voice-path comparison: 112 staging sessions across two model versions, scored by the same grader, before the production switch. See [D1](decisions/01-first-voice-stack-and-direct-webrtc.md).
 
 ## What the Evals Do Not Prove

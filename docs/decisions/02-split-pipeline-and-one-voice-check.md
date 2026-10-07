@@ -1,12 +1,12 @@
 # D2: Split the Voice Pipeline, and Check for One Voice per Session
 
-**Status**: Done in the first design (May 2026). The split was retired with the first voice stack; the one-voice check carried over in a new form.
+**Status**: Done in the first design (May 2026). The split was retired with the first voice stack; the one-voice check carried over in a narrower form.
 
 ---
 
 ## Context
 
-A buyer persona only works if it sounds like the same person from the first word to the last. In the first design, the realtime model both chose the words and spoke them, and partway through some sessions the persona's voice changed: listeners heard a different-sounding person mid-conversation. For a representative practicing a pitch, the buyer they were talking to stopped being one person, and the exercise broke.
+In Connect, a real-time voice AI sales role-play platform, a buyer persona only works if it sounds like the same person from the first word to the last. In the first design, the realtime model both chose the words and spoke them, and partway through some sessions the persona's voice changed: listeners heard a different-sounding person mid-conversation. For a representative practicing a pitch, the buyer they were talking to stopped being one person, and the exercise broke.
 
 It surfaced in development sessions and in live demonstrations in April 2026. Telemetry showed the voice setting the product sent stayed fixed for the whole session. The drift came from inside the realtime model's own speech synthesis, downstream of every setting the application controlled. No instruction to the model could fix a problem in how the model produced sound.
 
@@ -37,7 +37,7 @@ Split the pipeline so that speaking was no longer the model's job:
 
 The split did not survive the move to a direct WebRTC connection ([D1](01-first-voice-stack-and-direct-webrtc.md)). On today's path the realtime model speaks in its own built-in voice, chosen per persona when the session is minted, and the separate speech engine is kept only for an end-to-end smoke test.
 
-The check survived. The server-side observer records the voice the realtime service reports, for the session and for every conversation item, and a dashboard query flags any session where it changed. Today it is a dashboard tile, not an alert. The trade is plain: the first design ruled drift out by construction, and today's design watches for it.
+The check survived in a narrower form. The server-side observer records the voice the realtime service reports, for the session and for every conversation item, and a dashboard query flags any session where that reported voice changed. Today it is a dashboard tile, not an alert. The trade is plain: the first design ruled drift out by construction; today's design relies on the model's own voice holding steady, and the check catches a changed voice setting, which in the first design stayed fixed even while the audio drifted.
 
 ---
 

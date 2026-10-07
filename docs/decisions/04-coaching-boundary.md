@@ -6,7 +6,7 @@
 
 ## Context
 
-Connect produces a score for every practice call. That is what makes it useful to the representative, and it is also what makes it risky in this business:
+Connect, a real-time voice AI sales role-play platform, produces a score for every practice call. That is what makes it useful to the representative, and it is also what makes it risky in this business:
 
 - **In-home senior care is HIPAA-regulated.**
 - **Each franchise owner employs their own staff.** The representatives practicing in Connect work for the franchise owner, not for the corporate office that provides the product. Anything corporate builds for those staff raises joint-employer and franchise-agreement questions.
@@ -20,11 +20,11 @@ A practice tool that quietly turns into an evaluation tool would put the franchi
 
 **Terms of use.** I co-owned the terms of use, drafted with outside counsel and carrying a joint-employer statement. Each person accepts them once per version, inside the franchise portal.
 
-**A product shaped to the rule.** The design does not rely on people remembering the rule:
+**A product shaped to the rule.** The design supports the rule rather than leaving it to memory alone:
 
 - **No scoreboard and no ranking.**
 - **The coaching report is written for the representative.** It quotes their own words back to them with one suggested focus.
-- **Manager views are aggregate,** and kept apart from anything a representative sees.
+- **No automatic routing of individual results to managers.** A representative can copy a supervisor on a session's report before the call; an automatic manager copy is built but stays off until legal review.
 - **No call audio is kept, and nobody listens to sessions.** Speech becomes text as the representative talks, and only the text is graded.
 - **Erasure requests** cover the voice-path stores.
 
@@ -32,8 +32,8 @@ A practice tool that quietly turns into an evaluation tool would put the franchi
 
 - **(+)** The product stays a practice space, consistent with the franchise model's legal lines.
 - **(+)** Office owners still see where to focus their staff's practice.
-- **(-)** Corporate gives up per-person visibility it could otherwise have had.
-- **(-)** Anything that would route an individual's results upward, and any recruiting or pre-hire use, waits on legal review before it is switched on.
+- **(-)** The rule governs how scores are used, not who can read a report, so it depends on the coaches who hold to it as well as on the product.
+- **(-)** An automatic manager copy of an individual's report, and any recruiting or pre-hire use, wait on legal review before they are switched on.
 
 ---
 

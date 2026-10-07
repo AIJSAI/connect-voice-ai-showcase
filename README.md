@@ -49,7 +49,7 @@ flowchart LR
     subgraph Grade["Grading half: the grader"]
         Q["Service Bus<br/>dedupe + dead letter"]
         G["Grading worker<br/>(Azure Functions)"]
-        LLM["Azure OpenAI o4-mini<br/>strict output schema"]
+        LLM["Azure OpenAI reasoning model<br/>(o4-mini today)<br/>strict output schema"]
         Calc["Scores recomputed<br/>in code"]
     end
 
@@ -87,7 +87,7 @@ flowchart LR
 | **Service Bus + grading worker** | Duplicates dropped, failures kept. A reasoning model judges under a strict schema; code recomputes every total, bonus and band; calls spread over three model deployments with failover |
 | **Outputs** | Coaching email, stored report, and an analytics record for office-level trends |
 
-Everything runs on Azure, defined as Bicep. Detail: [docs/architecture.md](docs/architecture.md).
+The product runs on Azure, defined as Bicep; analytics land in Snowflake. Detail: [docs/architecture.md](docs/architecture.md).
 
 **Where it started.** Connect first ran on LiveKit, which carried the live audio while the realtime voice models matured. Once Azure offered generally available browser-direct WebRTC and a newer realtime model, I built the product's own WebRTC connection to Azure OpenAI, moved live calls onto it in August 2026, relaunched inside the franchise portal in September, and retired the first stack. The company now owns its scaling and pays no voice-platform fees.
 
@@ -105,7 +105,7 @@ Everything runs on Azure, defined as Bicep. Detail: [docs/architecture.md](docs/
 
 ## Quality and Testing
 
-- **The arithmetic is pinned.** 101 tests fix the scoring math, and a separate gate proves that rewording a criterion cannot move a score. They run on every pull request.
+- **The arithmetic is pinned.** 101 tests fix the scoring math, five of them in a gate that proves rewording a criterion cannot move a score. They run on every pull request.
 - **Every grader change replays reference calls.** A required check grades fourteen reference transcripts three times each on the real staging grader and blocks the merge if scores drift beyond a noise-aware tolerance; nine red-team cases (prompt injection, score manipulation) must hold. It also runs weekly to catch drift in the model itself.
 - **Hard calls are graded fairly.** Closing skill is judged against each persona's expected outcome, never curved, and switched on only after eight of nine personas held within model noise.
 - **Deploys prove themselves.** Staging, then production behind an approval gate; images with high or critical vulnerabilities fail the build; a real grading smoke runs end to end; the voice routes are smoke-tested after every deploy.
@@ -116,7 +116,7 @@ Detail: [docs/testing.md](docs/testing.md) and [docs/evals.md](docs/evals.md).
 
 - **Pilots, summer 2026.** I ran two pilot phases with franchise offices and sat with representatives as they used it. Every request got a recorded disposition with a reason. The pilots added difficulty levels and fuller reports, and the cast grew to nine buyer personas.
 - **Launch in waves.** A slow rollout opened in August 2026, pilot offices first; each office passes a scripted go-live check before it opens. In September the product moved inside the franchise portal, and the rollout continues across the network in waves.
-- **An incident, owned.** Mid-pilot, a fix for duplicate emails cut grading to about one session in seven for three days with no alert. I recovered the stranded reports, moved grading onto a queue with a single "already emailed" marker that cannot deadlock, and added the missing alerts.
+- **An incident, owned.** Mid-pilot, a fix for duplicate emails cut grading to about one session in seven for three days with no alert. I recovered the stranded reports, moved grading onto a queue with a single "already emailed" marker that cannot get stuck, and added the missing alerts.
 
 ## What I Learned
 
@@ -128,7 +128,7 @@ Detail: [docs/testing.md](docs/testing.md) and [docs/evals.md](docs/evals.md).
 ## Roadmap
 
 - **Live customer calls.** I built and demoed a proof of concept for scoring live customer calls with Connect, not only practice calls; it has not been piloted and is on the 2027 roadmap.
-- **The grader's successor model** already runs dark as a shadow grader ahead of the current model's retirement.
+- **The grader's successor model** is already deployed, with shadow grading built and ready to switch on ahead of the current model's retirement.
 - **Report-only evals** (consistency, coaching quality, evidence grounding, a golden set) become blocking once human grades are final.
 
 ## Project Status

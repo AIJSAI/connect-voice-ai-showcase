@@ -27,8 +27,8 @@ sequenceDiagram
 
     B->>W: Start a call (signed in through the portal)
     W->>W: Resolve office, reserve a capacity slot
-    W->>R: Mint a short-lived session with the persona's instructions
     B->>W: WebRTC offer
+    W->>R: Mint a short-lived session with the persona's instructions
     W->>R: Relay the offer on the minted session
     R-->>W: Answer
     W-->>B: Answer (no key, no instructions)
@@ -47,7 +47,7 @@ sequenceDiagram
 
 **The observer.** A server-side process joins each call over a separate channel. It captures the transcript that will be graded, watches the session's settings, and records the voice the service reports for the session and for every conversation item.
 
-**One voice per persona.** The realtime model speaks in its own built-in voice, chosen per persona when the session is minted. The observer's voice record feeds a dashboard that flags any session where the voice changed. The earlier design, where a separate speech engine spoke the model's words, is described in [D2](decisions/02-split-pipeline-and-one-voice-check.md).
+**One voice per persona.** The realtime model speaks in its own built-in voice, chosen per persona when the session is minted. The observer's voice record feeds a dashboard that flags any session where the reported voice setting changed. The earlier design, where a separate speech engine spoke the model's words, is described in [D2](decisions/02-split-pipeline-and-one-voice-check.md).
 
 **Capacity that fails cleanly.** Admission is decided per model pool against a fixed budget. A staging drill showed that a unit of realtime capacity behaves as a rate, not a seat, so the budget is set from measured behavior rather than the label. When the pool is full, the representative sees one busy screen with a retry countdown; calls already in progress are not degraded.
 
@@ -63,15 +63,15 @@ A practice tool is only useful if its scores mean something, so the live half is
 
 ## The Grading Half
 
-**Resilient intake.** A transcript landing in Blob Storage triggers a thin enqueuer. A Service Bus queue with duplicate detection and a dead-letter queue feeds the grading worker, so a transcript is graded once and a failure is kept for inspection instead of lost. The coaching email is guarded by a single terminal "already emailed" marker that cannot deadlock (see the incident in [testing](testing.md#monitoring-and-incidents)).
+**Resilient intake.** A transcript landing in Blob Storage triggers a thin enqueuer. A Service Bus queue with duplicate detection and a dead-letter queue feeds the grading worker, so a duplicate event never queues a second grade, a grade cut short by a host restart runs again, and a failure is kept for inspection instead of lost. The coaching email is guarded by a single terminal "already emailed" marker that cannot get stuck (see the incident in [testing](testing.md#monitoring-and-incidents)).
 
-**The model does the judging; code does the arithmetic.** The worker, an Azure Functions app, grades each transcript with a reasoning model (o4-mini) under a strict structured-output schema. The result is re-validated on the server, and every category total, bonus and band is recomputed deterministically instead of trusting the model's arithmetic. Calls spread across a pool of three model deployments with cooldown failover when one is rate limited.
+**The model does the judging; code does the arithmetic.** The worker, an Azure Functions app, grades each transcript with a reasoning model (o4-mini today, with its successor ready) under a strict structured-output schema. The result is re-validated on the server, and every category total, bonus and band is recomputed deterministically instead of trusting the model's arithmetic. Calls spread across a pool of three model deployments with cooldown failover when one is rate limited.
 
 **The rubric follows the call type.** Inside-sales calls are scored out of 90 and outside-sales calls out of 100, both normalized to 100 for analytics. The grader scores only what a transcript can show; see [D3](decisions/03-grader-audit-and-drift-gate.md).
 
 **Difficulty without curving.** A hard persona is written to decline. The grader judges closing skill against that persona's expected outcome rather than whether the AI agreed, never curves the total, and adds difficulty only as a label.
 
-**The successor model is already running.** A newer grading model is deployed dark as a shadow grader ahead of the current model's retirement, so the cutover is a configuration switch with evidence behind it.
+**The successor model is ready.** A newer grading model is already deployed, and shadow grading (each report graded a second time by the successor, stored and never emailed) is built and switched off until it is turned on ahead of the current model's retirement, so the cutover is a single configuration switch.
 
 ## Outputs
 
@@ -90,7 +90,7 @@ Each graded session produces three things:
 
 ## Inside the Franchise Portal
 
-Since September 2026, Connect is served inside the franchise portal, behind the portal's gateway and its sign-in. Each person's office is resolved on the server from the portal, never taken from the browser, and the terms of use are accepted once per person per version.
+Since September 2026, Connect is served inside the franchise portal, behind the portal's gateway and its sign-in. Each person's office is resolved on the server from the portal's records, and the terms of use are accepted once per person per version.
 
 ## Platform
 
@@ -99,7 +99,7 @@ Since September 2026, Connect is served inside the franchise portal, behind the 
 | Azure OpenAI GPT realtime model | The buyer's voice and reasoning | Generally available browser-direct WebRTC inside the Azure boundary the product already runs in |
 | Azure Container Apps | Web tier and observer | Containers with platform-level authentication, no servers to manage |
 | Azure Functions | Grading worker | Event-driven, scales with the queue |
-| Azure OpenAI o4-mini | The grader | Reasoning quality with strict structured output |
+| Azure OpenAI o4-mini (successor ready) | The grader | Reasoning quality with strict structured output |
 | Azure Service Bus | Grading queue | Duplicate detection and a dead-letter queue |
 | Azure Blob Storage | Transcripts | The only link between the halves; its events start grading |
 | Azure Cosmos DB | Stored reports | Managed document store on the same platform |

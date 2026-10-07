@@ -1,6 +1,6 @@
 # Testing: Connect
 
-How Connect is tested, deployed and watched. The grader's evaluations (the live replay of reference calls, red-team cases and calibration) have their own page: [evals](evals.md).
+How Connect, a real-time voice AI sales role-play platform, is tested, deployed and watched. The grader's evaluations (the live replay of reference calls, red-team cases and calibration) have their own page: [evals](evals.md).
 
 ---
 
@@ -27,7 +27,7 @@ They run in the Python CI job on every pull request and every push.
 
 ## On Every Pull Request
 
-- **The main branch is pull-request only,** behind nine required checks, with squash-only merges.
+- **The main branch is pull-request only,** behind a set of required checks, with squash-only merges.
 - **Every workflow action is pinned to a commit,** not a tag.
 - **The live eval gate** runs as a required check whenever grader content changes. See [evals](evals.md).
 
@@ -55,9 +55,9 @@ In the first design, the one-second round trip was a hard merge gate for the voi
 
 Two incidents shaped the monitoring more than any plan did.
 
-**The grading stall (June 2026, mid-pilot).** A fix for duplicate coaching emails left grading claims stuck. For about three days grading fell from nearly every session to about one in seven, and no alert fired. I recovered the stranded reports, moved grading onto a Service Bus queue with duplicate detection and a dead-letter queue, replaced the email guard with a single terminal "already emailed" marker that cannot deadlock, and added the alerts that would have caught it.
+**The grading stall (June 2026, mid-pilot).** A fix for duplicate coaching emails left grading claims stuck. For about three days grading fell from nearly every session to about one in seven, and no alert fired. I recovered the stranded reports, moved grading onto a Service Bus queue with duplicate detection and a dead-letter queue, replaced the email guard with a single terminal "already emailed" marker that cannot get stuck, and added the alerts that would have caught it.
 
-**The probe that nobody read.** On launch night, the only production availability test turned out to be probing the product's old address and failing every run, with nobody reading the results. A new probe with a severity-one alert replaced it.
+**The probe that nobody read.** In launch week, the only production availability test turned out to be probing the product's old address and failing every run, with nobody reading the results. A new probe with a severity-one alert replaced it.
 
 Other standing signals:
 
@@ -70,7 +70,7 @@ In July 2026, ahead of any real client data, I commissioned a security and priva
 
 ## How It Was Built
 
-I am Connect's only engineer. I built it with AI coding agents working under a written rulebook: current documentation is fetched before any SDK change, and a citation check blocks a merge when a cited source does not support the code it is cited for.
+I built Connect alone, working with AI coding agents under a written rulebook: current documentation is fetched before any SDK change, and a citation check blocks a merge when a cited source does not support the code it is cited for.
 
 ---
 

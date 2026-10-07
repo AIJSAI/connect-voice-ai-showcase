@@ -6,7 +6,7 @@
 
 ## Context
 
-The grader is the part of Connect a representative actually trusts or doesn't. A score only means something if it matches the rubric representatives are already held to: the company's official inside-sales and outside-sales rubrics.
+The grader is the part of Connect, a real-time voice AI sales role-play platform, that a representative actually trusts or doesn't. A score only means something if it matches the rubric representatives are already held to: the company's official inside-sales and outside-sales rubrics.
 
 In February 2026 I tested the AI grader against those rubrics, criterion by criterion, and it had drifted:
 
@@ -30,7 +30,7 @@ None of this showed up as an error. The grader returned confident, complete-look
 
 Two layers, one deterministic and one live:
 
-1. **The arithmetic is pinned.** 101 tests fix the scoring math across bands, rounding, normalization, bonus caps, point enforcement, floors, totals and difficulty bands. A separate gate proves that rewording a criterion cannot move a score. Both run on every pull request and every push.
+1. **The arithmetic is pinned.** 101 tests fix the scoring math across bands, rounding, normalization, bonus caps, point enforcement, floors, totals and difficulty bands; five of them form a gate that proves rewording a criterion cannot move a score. They run on every pull request and every push.
 2. **The judgment is replayed (since July 2026).** A required check runs on every pull request. When grader content changes (prompts, scoring code, rubrics, schemas or eval fixtures), it replays fourteen reference transcripts across eight personas, three times each, against the real staging grader, and fails the merge if the mean score drifts beyond a per-transcript tolerance that widens with measured run-to-run noise above a fixed floor. Nine red-team cases, including prompt injection and score manipulation, must hold. The same check runs weekly, because a model can drift with no change on our side.
 
 Details of both layers are in [testing](../testing.md) and [evals](../evals.md).
