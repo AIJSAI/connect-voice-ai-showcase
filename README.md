@@ -38,7 +38,7 @@ flowchart LR
     end
 
     subgraph Live["Live half: the buyer"]
-        RT["Azure OpenAI GPT realtime model<br/>Data Zone deployment: primary pool<br/>Global Standard deployment: overflow pool"]
+        RT["Azure OpenAI<br/>GPT realtime model<br/>Data Zone: primary pool<br/>Global Standard: overflow"]
         Obs["Observer<br/>(server side)"]
     end
 
