@@ -6,7 +6,7 @@ This page describes how Connect, a real-time voice AI sales role-play platform, 
 
 ## Two Halves Joined Only Through Storage
 
-A sales conversation and a careful grade want opposite things. A spoken conversation breaks when the other side pauses, so the buyer is built to answer within a one-second round trip. A grade against a multi-category rubric takes a reasoning model about a minute. Putting both in one loop would make every reply wait on the slowest step.
+A sales conversation and a careful grade want opposite things. A spoken conversation breaks when the other side pauses, so the buyer is built against a design target of a one-second round trip. A grade against a multi-category rubric takes a reasoning model about a minute. Putting both in one loop would make every reply wait on the slowest step.
 
 So Connect is two halves that never call each other:
 
@@ -89,7 +89,7 @@ A practice tool is only useful if its scores mean something, so the live half is
 Every model Connect runs on has a retirement date, so each one is treated as a scheduled product risk rather than a surprise.
 
 - **Transcription moved twelve days early.** A retired transcriber fails silently: the call still works, but no report ever arrives. I picked the successor in a bake-off on scripted calls, where it had no failed transcriptions and a shorter transcript lag (0.58 against 0.72 seconds), and switched live transcription to it twelve days before the old model's retirement date. The switch was kept out of any window that changed the grader, since two changes to grading inputs at once cannot be told apart.
-- **The grader's successor is deployed and switched off.** Shadow grading is built so real reports can be compared side by side before the switch, which is one setting. Once shadow grading is switched on, the successor grades each report a second time after the representative's report has gone out, and its scores are stored for comparison and never emailed. A dated check, run both as an alert rule and as a daily scheduled job, goes red if any grade still runs on the current model from nine days before its retirement.
+- **As of October 2026, the grader's successor is deployed and switched off.** Shadow grading is built so real reports can be compared side by side before the switch, which is one setting. Once shadow grading is switched on, the successor grades each report a second time after the representative's report has gone out, and its scores are stored for comparison and never emailed. A dated check, run both as an alert rule and as a daily scheduled job, goes red if any grade still runs on the current model from nine days before its retirement.
 
 ## Outputs
 
@@ -102,7 +102,7 @@ Each graded session produces three things:
 ## Privacy by Design
 
 - **No call audio is kept.** Speech becomes text as the representative talks, and only the text is graded.
-- **No person listens to a session,** live or afterward.
+- **The product gives no one a way to listen to a session,** live or afterward.
 - **There is no scoreboard and no ranking.**
 
 These choices cover audio and ranking. The written transcript and report are kept and emailed, and the terms of use each person accepts say who receives them. The reasoning is in [D4](decisions/04-no-call-audio-and-no-scoreboard.md).
@@ -119,7 +119,7 @@ Since September 2026, Connect is served inside the franchise portal, behind the 
 | Azure OpenAI transcription model | The representative's speech as text | The successor model since October 2026, ahead of the old model's retirement |
 | Azure Container Apps | Web tier and observer | Containers with platform-level authentication, no servers to manage |
 | Azure Functions | Grading worker | Event-driven, scales with the queue |
-| Azure OpenAI reasoning model (successor deployed, switched off) | The grader | Reasoning quality with strict structured output |
+| Azure OpenAI reasoning model (successor deployed and switched off as of October 2026) | The grader | Reasoning quality with strict structured output |
 | Azure Service Bus | Grading queue | Duplicate detection and a dead-letter queue |
 | Azure Blob Storage | Transcripts | The only link between the halves; its events start grading |
 | Azure Cosmos DB | Stored reports | Managed document store on the same platform |

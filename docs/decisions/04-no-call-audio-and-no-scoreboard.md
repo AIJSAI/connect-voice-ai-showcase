@@ -15,7 +15,7 @@ Two things would undercut that. A recording of every practice call is a sensitiv
 Design both out of the product:
 
 - **No call audio is kept.** The representative's speech becomes text inside the realtime session as they talk, and only that text is graded. There is no audio recording to store.
-- **No person listens to a session,** live or afterward, and there is no audio to play back later.
+- **The product gives no one a way to listen to a session,** live or afterward, and there is no audio to play back later.
 - **No scoreboard and no ranking** anywhere in the product. No score is ranked against anyone else's, and running the scenario again is the intended response to a low one.
 
 These choices cover audio and ranking. The written transcript and report are kept and emailed, and the terms of use each person accepts say who receives them.

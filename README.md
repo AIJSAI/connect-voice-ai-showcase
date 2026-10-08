@@ -61,9 +61,9 @@ flowchart LR
     end
 
     Rep -->|open a session,<br/>then begin the call| Web
-    Web -->|admit to a pool,<br/>mint short-lived session| RT
+    Web -->|admit to a pool, mint a<br/>short-lived session,<br/>relay the handshake| RT
     Web -->|attach before<br/>audio flows| Obs
-    Rep <-->|WebRTC audio,<br/>handshake relayed by server| RT
+    Rep <-->|WebRTC audio| RT
     Obs <-->|side channel: transcript,<br/>persona guard, voice setting| RT
     Obs -->|transcript at hang-up| Blob
     Blob -->|trigger + enqueue| Q
@@ -99,17 +99,17 @@ The product runs on Azure, with every environment defined in Bicep; analytics la
 | Decision | Choice | Why |
 |----------|--------|-----|
 | [Two halves](docs/architecture.md#two-halves-joined-only-through-storage) | Live buyer and asynchronous grader, joined through storage | A reply needs a second; a careful grade takes a minute |
-| [D1: Voice stack](docs/decisions/01-first-voice-stack-and-direct-webrtc.md) | Start on a voice platform, then build a direct WebRTC connection to Azure OpenAI | Once the realtime models matured on Azure OpenAI, the only lock-in left was the media transport |
+| [D1: Voice stack](docs/decisions/01-first-voice-stack-and-direct-webrtc.md) | Start on a voice platform, then build a direct WebRTC connection to Azure OpenAI | Once the realtime models matured on Azure OpenAI, the only dependency left was the media transport |
 | [D2: One voice](docs/decisions/02-split-pipeline-and-one-voice-check.md) | First design: split the voice pipeline so each persona kept one voice; replaced in August 2026 | A buyer who stops sounding like the same person breaks the exercise |
 | [D3: Grader audit](docs/decisions/03-grader-audit-and-drift-gate.md) | Realign the grader to the official rubrics, then gate every grader change | Testing found half the outside-sales criteria missing, ten of the twenty |
-| [D4: No call audio, no scoreboard](docs/decisions/04-no-call-audio-and-no-scoreboard.md) | Speech becomes text as the representative talks and only the text is graded; nobody listens in, and nothing ranks people | A practice tool that keeps recordings of people's voices, or ranks them, stops feeling like practice |
+| [D4: No call audio, no scoreboard](docs/decisions/04-no-call-audio-and-no-scoreboard.md) | Speech becomes text as the representative talks and only the text is graded; the product gives no one a way to listen in, and nothing ranks people | A practice tool that keeps recordings of people's voices, or ranks them, stops feeling like practice |
 | [Two realtime pools](docs/architecture.md#capacity-two-pools-and-one-busy-screen) | The same model on two deployments, the faster one first, and a single busy screen with a retry countdown once both are full | Azure slows calls already in progress once a deployment's token rate is exceeded, rather than refusing new ones |
 | [Model retirements](docs/architecture.md#model-retirements-planned-ahead) | Treat each retirement date as a scheduled product risk | A retired transcriber fails silently: the call still works, but no report arrives |
 | [Honest practice](docs/architecture.md#honest-practice-by-construction) | Instructions never reach the browser; the server captures the transcript | Blind practice holds even if a browser is tampered with |
 
 ## Quality and Testing
 
-- **The arithmetic is pinned.** 101 tests fix the scoring math, five of them in a gate that checks that rewording a criterion cannot move a score. They run on every pull request and every push.
+- **The arithmetic is pinned.** 101 tests fix the scoring math, five of them in a gate that checks that rewording a criterion cannot change the score arithmetic. They run on every pull request and every push to main.
 - **Every grader change replays reference transcripts.** A required check grades fourteen reference transcripts three times each on the live staging grader and blocks the merge if scores drift beyond a noise-aware tolerance; nine red-team cases (prompt injection, score manipulation) must hold. It also runs weekly to catch drift in the model itself.
 - **Hard calls are scored against their own goal.** Closing skill is judged against each persona's expected outcome rather than whether the AI agreed, and the total is never curved. The change went live only after a calibration in which eight of nine personas held within model noise; the ninth moved a little more and was reviewed and accepted.
 - **Every deploy is checked.** Staging first, then production behind three approval gates, only one of which moves traffic, and that one is approved in a quiet window. Container images fail the build on any fixable high or critical vulnerability; an end-to-end grading smoke test runs on staging; the voice routes are smoke-tested after every deploy.
@@ -144,7 +144,7 @@ Detail: [docs/testing.md](docs/testing.md) and [docs/evals.md](docs/evals.md).
 | Direct WebRTC voice path, July and August 2026 | Done |
 | Franchise portal relaunch and first stack retired, September 2026 | Done |
 | Two realtime pools and the transcription successor, October 2026 | Live in production |
-| Grader successor | Deployed and switched off; a side-by-side comparison of real reports comes before the switch |
+| Grader successor, as of October 2026 | Deployed and switched off; a side-by-side comparison of real reports comes before the switch |
 | Rollout across the franchise network | In progress, in waves |
 
 ---

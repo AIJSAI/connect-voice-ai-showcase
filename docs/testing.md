@@ -21,7 +21,7 @@ The grader's arithmetic is pinned by 101 deterministic tests, separate from any 
 - **96 tests in thirteen test classes,** covering score bands for each rubric, rounding and floating-point edges, normalization to a common scale, bonus caps, per-criterion point enforcement, score floors, total validation, the mapping to the difficulty label, and the edges between bands.
 - **5 tests in an inertness gate** that check that rewording a criterion cannot change the score arithmetic. How the model reads a reworded criterion is the live eval gate's job.
 
-They run in the Python CI job on every pull request and every push.
+They run in the Python CI job on every pull request and every push to main.
 
 ## On Every Pull Request
 

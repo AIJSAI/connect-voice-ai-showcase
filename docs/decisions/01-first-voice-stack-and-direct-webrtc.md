@@ -22,7 +22,7 @@ The dependency was the media transport, not the model. The model was already Azu
 
 | Option | Outcome |
 |--------|---------|
-| Stay on the first stack | Workable, but the company would pay a platform fee that grows with the network for a layer it no longer needed |
+| Stay on the first stack | Workable, but the company would pay a platform fee that grows with the network for a media layer Azure now offered directly |
 | An alternate Azure voice engine behind the same transport | Tried in June and July. It kept the first stack's transport, so it removed neither the dependency nor the fee, and its parity checks never went green |
 | Connect to OpenAI directly | Rejected: the product's model calls stay on Azure OpenAI, inside the Azure environment the rest of the product runs in |
 | **Azure OpenAI's own browser-direct WebRTC** | **Chosen** |
