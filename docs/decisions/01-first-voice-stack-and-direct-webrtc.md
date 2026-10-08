@@ -23,7 +23,7 @@ Looking at it closely, the lock-in was the media transport, not the model. The m
 | Option | Outcome |
 |--------|---------|
 | Stay on the first stack | Workable, but the company would pay a platform fee that grows with the network for a layer it no longer needed |
-| An alternate Azure voice engine behind the same transport | Tried in June and July. It kept the first stack's transport, so it removed neither the dependency nor the fee; its parity checks never went green, and its production trial was rolled back the same day |
+| An alternate Azure voice engine behind the same transport | Tried in June and July. It kept the first stack's transport, so it removed neither the dependency nor the fee, and its parity checks never went green |
 | Connect to OpenAI directly | Rejected: it would take the product outside the Azure compliance boundary it already runs inside |
 | **Azure OpenAI's own browser-direct WebRTC** | **Chosen** |
 
@@ -41,20 +41,19 @@ The decision was first recorded as the target for whenever the product left the 
 The move was staged so that each step could be undone:
 
 1. **A capture-parity spike** checked that the server-side capture on the direct path matched the old path: 18 of 18 runs passed.
-2. **Built dark.** The session service, browser client, observer, capacity ledger and region groundwork shipped dormant behind a flag.
+2. **Built dark.** The session service, browser client, observer and capacity ledger shipped dormant behind a flag.
 3. **Compared side by side.** A 112-session staging comparison of the old and new paths, across two model versions and scored by the same grader, came back green for the new path on the newer model.
-4. **The first production switch failed, and was reverted the same night.** The first real call went silent after its third turn. The cause: the browser client never answered the model's end-call tool. Within three days the fix was in, along with a detector for a model that goes silent and a microphone check before each call.
-5. **Switched for good** in August 2026, with the first stack kept as a hot fallback. A launch-day dry run passed 18 of 18 sessions on the new path.
-6. **Measured before retiring.** A month later an audit showed the fallback had fired zero times in 30 days. I decided to run the new path only, and decommissioned the first stack's agents, the fallback, its backup region and the platform project.
+4. **Switched** in August 2026, with the first stack kept as a hot fallback, a detector for a model that goes silent, and a microphone check before each call. A launch-day dry run passed 18 of 18 sessions on the new path.
+5. **Proved on production traffic before retiring.** An audit a month later showed the fallback had gone unused. I decided to run the new path only, and decommissioned the first stack's agents, the fallback and the platform project.
 
 ## Consequences
 
-- **(+)** The company owns its scaling and pays no voice-platform fees.
+- **(+)** The company owns its scaling, within its own Azure quota, and pays no voice-platform fees.
 - **(+)** One fewer vendor and one fewer hop between a representative and the buyer.
 - **(+)** The product stays inside the Azure boundary it already runs in.
-- **(-)** Little latency gain: well under a fifth of a second, because model inference dominates a turn. Speed was never the reason.
+- **(-)** Little expected latency gain: well under a fifth of a second, because model inference dominates a turn. Speed was never the reason.
 - **(-)** The browser now holds the media connection, so the observer exists to keep the transcript and the persona authoritative. See [honest practice](../architecture.md#honest-practice-by-construction).
-- **(-)** Azure offers realtime WebRTC in a limited set of regions, so capacity is planned per model pool, and a full pool shows a busy screen with a retry countdown rather than a degraded call.
+- **(-)** Azure offers realtime WebRTC in a limited set of regions, so capacity is planned per deployment: two pools of the same model, the faster one first, and one busy screen with a retry countdown once both are full. See [capacity](../architecture.md#capacity-two-pools-and-one-busy-screen).
 - **(-)** The realtime model now speaks in its own built-in voice, so the speech split of [D2](02-split-pipeline-and-one-voice-check.md) no longer applies; the voice check moved to the observer.
 
 ---

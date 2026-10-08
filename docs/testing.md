@@ -33,8 +33,9 @@ They run in the Python CI job on every pull request and every push.
 
 ## On Every Deploy
 
-- **Every product change deploys to staging, then to production** behind an approval gate.
-- **Container images fail the build** on any high or critical vulnerability finding.
+- **Every product change deploys to staging, then to production.** Production deploys pass three approval gates, and only one of them moves traffic; I approve it in a quiet window. Documentation-only merges deploy nothing.
+- **Infrastructure before code.** A deploy is blocked until any infrastructure change it carries has been applied to both staging and production.
+- **Container images fail the build** on any fixable high or critical vulnerability.
 - **Staging deploys run a real grading smoke test,** end to end, through the actual grader.
 - **The voice routes are smoke-tested** after each deploy.
 - **Rollback is a per-app image update.** Re-running an old deploy is not a rollback, and the runbook says so.
@@ -45,23 +46,17 @@ The live half is tested the way a representative uses it:
 
 - **Before the move to direct WebRTC:** a capture-parity spike (18 of 18 runs), then a 112-session staging comparison of the old and new paths across two model versions, scored by the same grader. See [D1](decisions/01-first-voice-stack-and-direct-webrtc.md).
 - **Launch-day dry run:** 18 of 18 sessions passed on the new path.
-- **A silent-model detector and a microphone check before each call,** both added after the first production switch went quiet mid-call.
+- **A detector for a model that goes silent, and a microphone check before each call.**
 - **Per-office go-live:** each office passes a scripted smoke test through the real product path before it opens.
-- **One voice per session:** the observer records the voice the realtime service reports for every conversation item, and a dashboard flags any session where it changed. See [D2](decisions/02-split-pipeline-and-one-voice-check.md).
+- **Pools and the busy screen:** admission to each realtime pool and the refusal once both are full were proven in a staging drill before the pools went live in production.
+- **Deployments measured, not assumed:** scripted test calls measured the realtime model on both production deployments before the faster one became the primary pool, and a bake-off on scripted calls picked the transcription successor. See [architecture](architecture.md#capacity-two-pools-and-one-busy-screen).
+- **One voice per session:** the observer records the voice setting the realtime service reports for every conversation item, and a dashboard flags any session where it changed. See [D2](decisions/02-split-pipeline-and-one-voice-check.md).
 
-In the first design, the one-second round trip was a hard merge gate for the voice pipeline, and the time to first token, a pilot launch criterion, measured under seven tenths of a second at the 95th percentile over 25 samples.
+In the first design, the one-second round trip was a hard merge gate for the voice pipeline.
 
-## Monitoring and Incidents
+## Monitoring
 
-Two incidents shaped the monitoring more than any plan did.
-
-**The grading stall (June 2026, mid-pilot).** A fix for duplicate coaching emails left grading claims stuck. For about three days grading fell from nearly every session to about one in seven, and no alert fired. I recovered the stranded reports, moved grading onto a Service Bus queue with duplicate detection and a dead-letter queue, replaced the email guard with a single terminal "already emailed" marker that cannot get stuck, and added the alerts that would have caught it.
-
-**The probe that nobody read.** In launch week, the only production availability test turned out to be probing the product's old address and failing every run, with nobody reading the results. A new probe with a severity-one alert replaced it.
-
-Other standing signals:
-
-- **A dated alert for model retirement** fires if any grade still runs on the current grading model close to its retirement date.
+- **A dated check for model retirement,** run both as an alert rule and as a daily scheduled job, goes red if any grade still runs on the current grading model from nine days before its retirement.
 - **A daily usage digest** runs as a scheduled job.
 
 ## Security Review
@@ -70,7 +65,7 @@ In July 2026, ahead of any real client data, I commissioned a security and priva
 
 ## How It Was Built
 
-I built Connect alone, working with AI coding agents under a written rulebook: current documentation is fetched before any SDK change, and a citation check blocks a merge when a cited source does not support the code it is cited for.
+I built Connect alone and recorded more than thirty architecture decisions along the way, working with AI coding agents under a written rulebook: current documentation is fetched before any SDK change, and a citation check blocks a merge when a cited source does not support the code it is cited for.
 
 ---
 

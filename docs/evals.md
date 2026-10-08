@@ -31,7 +31,8 @@ Four more measures run today but do not block a merge: consistency, coaching qua
 
 ## Model Changes
 
-- **The grading model's successor is deployed, with shadow grading built and switched off until it is turned on** ahead of the current model's retirement. The cutover is one configuration switch, and a dated alert fires if any grade still runs on the old model close to the retirement date.
+- **The grading model's named successor is deployed and switched off.** Shadow grading is built so real reports can be compared side by side before the switch, which is one setting. A dated check, run both as an alert rule and as a daily scheduled job, goes red if any grade still runs on the current model from nine days before its retirement.
+- **The transcription model** was replaced ahead of its retirement after a bake-off on scripted calls, where the successor had no failed transcriptions and a shorter transcript lag (0.58 against 0.72 seconds). See [architecture](architecture.md#model-retirements-planned-ahead).
 - **The realtime model** was evaluated through the voice-path comparison: 112 staging sessions across two model versions, scored by the same grader, before the production switch. See [D1](decisions/01-first-voice-stack-and-direct-webrtc.md).
 
 ## What the Evals Do Not Prove

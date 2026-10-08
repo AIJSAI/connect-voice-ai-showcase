@@ -1,6 +1,6 @@
 # Decisions: Connect
 
-Connect is a real-time voice AI sales role-play platform. Its private repository holds nearly thirty recorded architecture decisions. These four are the ones that shaped the product most, rewritten here in my own words.
+Connect is a real-time voice AI sales role-play platform. Its private repository holds more than thirty recorded architecture decisions. These four are the ones that shaped the product most, rewritten here in my own words.
 
 | # | Decision | In one line |
 |---|----------|-------------|

@@ -25,8 +25,9 @@ sequenceDiagram
     participant S as Blob Storage
     participant G as Grader
 
-    B->>W: Start a call (signed in through the portal)
-    W->>W: Resolve office, reserve a capacity slot
+    B->>W: Start a call (signed in through the portal's single sign-on)
+    W->>W: Resolve office, admit to the primary pool, else the overflow
+    Note over B,W: Both pools full: one busy screen with a retry countdown
     B->>W: WebRTC offer
     W->>R: Mint a short-lived session with the persona's instructions
     W->>R: Relay the offer on the minted session
@@ -34,7 +35,7 @@ sequenceDiagram
     W-->>B: Answer (no key, no instructions)
     B->>R: Live audio, both ways
     O->>R: Join over a separate server-side channel
-    R-->>O: Transcript events, session state, reported voice
+    R-->>O: Transcript events, session state, reported voice setting
     O->>R: Re-assert the persona if the session was changed
     O->>S: Authoritative transcript at hang-up
     S->>G: Blob event starts grading
@@ -43,15 +44,21 @@ sequenceDiagram
 
 ## The Live Half
 
-**Direct WebRTC to Azure OpenAI.** The browser holds a WebRTC audio connection straight to Azure OpenAI's GPT realtime model. There is no media server in between. The product's own server sets every call up: it reserves a capacity slot, mints a short-lived session that carries the persona's instructions, and relays the WebRTC handshake. The browser never holds a key and never sees the instructions.
+**Direct WebRTC to Azure OpenAI.** The browser holds a WebRTC audio connection straight to Azure OpenAI's GPT realtime model, served from two deployments of the same model. There is no media server in between. The product's own server sets every call up: it admits the call to a capacity pool, mints a short-lived session that carries the persona's instructions, and relays the WebRTC handshake. The browser never holds a key and never sees the instructions.
 
-**The observer.** A server-side process joins each call over a separate channel. It captures the transcript that will be graded, watches the session's settings, and records the voice the service reports for the session and for every conversation item.
+**The observer.** A server-side process joins each call over a separate channel. It captures the transcript that will be graded, watches the session's settings, and records the voice setting the service reports for the session and for every conversation item.
 
-**One voice per persona.** The realtime model speaks in its own built-in voice, chosen per persona when the session is minted. The observer's voice record feeds a dashboard that flags any session where the reported voice setting changed. The earlier design, where a separate speech engine spoke the model's words, is described in [D2](decisions/02-split-pipeline-and-one-voice-check.md).
+**One voice per persona.** The realtime model speaks in its own built-in voice, chosen per persona when the session is minted. The observer's record feeds a dashboard that flags any session where the service-reported voice setting changed; it checks that setting, not the sound of the audio. The earlier design, where a separate speech engine spoke the model's words, is described in [D2](decisions/02-split-pipeline-and-one-voice-check.md).
 
-**Capacity that fails cleanly.** Admission is decided per model pool against a fixed budget. A staging drill showed that a unit of realtime capacity behaves as a rate, not a seat, so the budget is set from measured behavior rather than the label. When the pool is full, the representative sees one busy screen with a retry countdown; calls already in progress are not degraded.
+**Transcription.** The representative's speech becomes text inside the realtime session, and that text is what gets graded. Since October 2026 it runs on the transcription model's successor; see [model retirements](#model-retirements-planned-ahead).
 
-**Latency.** The target is a one-second round trip, glass to glass. Measured in October 2026, the median response per turn was about 0.6 seconds on the primary deployment and about 2 seconds on the global overflow pool. Leaving the first voice stack was never mainly about speed: the expected gain was well under a fifth of a second, because model inference dominates the turn.
+## Capacity: Two Pools and One Busy Screen
+
+Live calls run on two deployments of the same realtime model. In scripted test calls against the production deployments in October 2026, the model's median time from the end of the representative's speech to the start of its reply was about 0.6 seconds on the Data Zone deployment and about 2 seconds on the Global Standard deployment of the same model, so the faster one became the primary pool and live calls go to it first.
+
+A staging drill showed that once a deployment's token rate is exceeded, Azure slows the calls already in progress rather than refusing new ones: a unit of realtime capacity behaves as a rate, not a seat. So instead of raising the call ceiling on one deployment, I added a second realtime pool on quota the company already held, and admission is decided before a call starts. Each call is admitted to the faster pool first and the overflow pool second. Once both are full, new calls are turned away with one busy screen and a retry countdown before they could slow the calls already in progress.
+
+Leaving the first voice stack was never mainly about speed: the expected gain was well under a fifth of a second, because model inference dominates the turn.
 
 ## Honest Practice by Construction
 
@@ -63,15 +70,20 @@ A practice tool is only useful if its scores mean something, so the live half is
 
 ## The Grading Half
 
-**Resilient intake.** A transcript landing in Blob Storage triggers a thin enqueuer. A Service Bus queue with duplicate detection and a dead-letter queue feeds the grading worker, so a duplicate event never queues a second grade, a grade cut short by a host restart runs again, and a failure is kept for inspection instead of lost. The coaching email is guarded by a single terminal "already emailed" marker that cannot get stuck (see the incident in [testing](testing.md#monitoring-and-incidents)).
+**Resilient intake.** A transcript landing in Blob Storage triggers a thin enqueuer. A Service Bus queue with duplicate detection and a dead-letter queue feeds the grading worker, so a duplicate event never queues a second grade, a grade cut short by a host restart runs again, and a failure is kept for inspection instead of lost. The coaching email is guarded by a single terminal "already emailed" marker that cannot get stuck.
 
-**The model does the judging; code does the arithmetic.** The worker, an Azure Functions app, grades each transcript with a reasoning model (o4-mini today, with its successor ready) under a strict structured-output schema. The result is re-validated on the server, and every category total, bonus and band is recomputed deterministically instead of trusting the model's arithmetic. Calls spread across a pool of three model deployments with cooldown failover when one is rate limited.
+**The model does the judging; code does the arithmetic.** The worker, an Azure Functions app, grades each transcript with a reasoning model on Azure OpenAI under a strict structured-output schema. The result is re-validated on the server, and every category total, bonus and band is recomputed deterministically instead of trusting the model's arithmetic. Calls spread across a pool of model deployments with cooldown failover when one is rate limited.
 
 **The rubric follows the call type.** Inside-sales calls are scored out of 90 and outside-sales calls out of 100, both normalized to 100 for analytics. The grader scores only what a transcript can show; see [D3](decisions/03-grader-audit-and-drift-gate.md).
 
 **Difficulty without curving.** A hard persona is written to decline. The grader judges closing skill against that persona's expected outcome rather than whether the AI agreed, never curves the total, and adds difficulty only as a label.
 
-**The successor model is ready.** A newer grading model is already deployed, and shadow grading (each report graded a second time by the successor, stored and never emailed) is built and switched off until it is turned on ahead of the current model's retirement, so the cutover is a single configuration switch.
+## Model Retirements, Planned Ahead
+
+Every model Connect runs on has a retirement date, so each one is treated as a scheduled product risk rather than a surprise.
+
+- **Transcription moved twelve days early.** A retired transcriber fails silently: the call still works, but no report ever arrives. I picked the successor in a bake-off on scripted calls, where it had no failed transcriptions and a shorter transcript lag (0.58 against 0.72 seconds), and switched live transcription to it twelve days before the old model's retirement date. The switch was kept out of any window that changed the grader, since two changes to grading inputs at once cannot be told apart.
+- **The grader's successor is deployed and switched off.** Shadow grading is built so real reports can be compared side by side before the switch, which is one setting. While it is on, each report is graded a second time by the successor, and those scores are stored and never emailed. A dated check, run both as an alert rule and as a daily scheduled job, goes red if any grade still runs on the current model from nine days before its retirement.
 
 ## Outputs
 
@@ -90,16 +102,17 @@ Each graded session produces three things:
 
 ## Inside the Franchise Portal
 
-Since September 2026, Connect is served inside the franchise portal, behind the portal's gateway and its sign-in. Each person's office is resolved on the server from the portal's records, and the terms of use are accepted once per person per version.
+Since September 2026, Connect is served inside the franchise portal, behind the portal's single sign-on. I moved it there by standing up a second front door beside the live one, so the old address kept serving until a redirect moved everyone across on the eve of the portal launch. Each person's office is resolved on the server from the portal's records, and the terms of use are accepted once per person per version.
 
 ## Platform
 
 | Technology | Role | Why this choice |
 |-----------|------|-----------------|
-| Azure OpenAI GPT realtime model | The buyer's voice and reasoning | Generally available browser-direct WebRTC inside the Azure boundary the product already runs in |
+| Azure OpenAI GPT realtime model, on two deployments | The buyer's voice and reasoning | Generally available browser-direct WebRTC inside the Azure boundary the product already runs in; the faster Data Zone deployment is the primary pool, Global Standard the overflow |
+| Azure OpenAI transcription model | The representative's speech as text | The successor model since October 2026, ahead of the old model's retirement |
 | Azure Container Apps | Web tier and observer | Containers with platform-level authentication, no servers to manage |
 | Azure Functions | Grading worker | Event-driven, scales with the queue |
-| Azure OpenAI o4-mini (successor ready) | The grader | Reasoning quality with strict structured output |
+| Azure OpenAI reasoning model (successor deployed, switched off) | The grader | Reasoning quality with strict structured output |
 | Azure Service Bus | Grading queue | Duplicate detection and a dead-letter queue |
 | Azure Blob Storage | Transcripts | The only link between the halves; its events start grading |
 | Azure Cosmos DB | Stored reports | Managed document store on the same platform |
@@ -117,10 +130,11 @@ Azure offers realtime WebRTC in a limited set of regions, so region choice and c
 | Before the build | The two-halves split decided against the one-second target |
 | January 2026 | First commit. The first production stack ran on LiveKit Cloud, which carried the audio to an agent worker that drove Azure OpenAI's realtime model |
 | May 2026 | The voice pipeline split to keep one voice per persona ([D2](decisions/02-split-pipeline-and-one-voice-check.md)) |
-| June and July 2026 | Franchise pilots; grading moved onto Service Bus after a mid-pilot stall |
+| June and July 2026 | Franchise pilots; grading moved onto a Service Bus queue |
 | July 2026 | Decision to move to Azure OpenAI's own browser-direct WebRTC; the new path built dark behind a flag |
 | August 2026 | Live calls moved to the new path, with the first stack kept as a hot fallback ([D1](decisions/01-first-voice-stack-and-direct-webrtc.md)) |
 | September 2026 | Relaunched inside the franchise portal; the first stack retired |
+| October 2026 | Two realtime pools, the faster deployment first; live transcription moved to its successor; the grader's successor deployed and switched off |
 
 ---
 
