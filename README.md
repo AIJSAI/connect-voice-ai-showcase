@@ -24,7 +24,7 @@ Franchise offices had been paying for outside role-play tools or role-playing wi
 
 1. **Latency.** A spoken conversation breaks when the other side pauses, so the buyer is built to answer within a one-second round trip.
 2. **Grading depth.** Scoring a transcript against a multi-category rubric takes a reasoning model about a minute. That cannot sit inside a conversation.
-3. **A regulated setting.** In-home senior care is HIPAA-regulated, and each franchise owner employs their own staff. Privacy shaped the product's design; how corporate may use a score is set by a policy, described in [D4](docs/decisions/04-coaching-boundary.md).
+3. **A regulated setting.** In-home senior care is HIPAA-regulated, and each franchise owner employs their own staff, so privacy shaped the design from the start ([D4](docs/decisions/04-no-call-audio-and-no-scoreboard.md)).
 
 ## Architecture
 
@@ -85,7 +85,7 @@ flowchart LR
 | Component | What it does |
 |-----------|--------------|
 | **Web tier** | Served inside the franchise portal, behind the portal's single sign-on. Admits each call to a realtime pool, mints a short-lived session carrying the persona's instructions, and relays the WebRTC handshake; the browser never holds a key or sees the instructions |
-| **GPT Realtime 2.1** | Plays the buyer over a direct WebRTC audio connection, in a voice chosen per persona. Two deployments of the same model: the faster Data Zone deployment is the primary pool and a Global Standard deployment is the overflow. Live transcription has run on the transcription model's successor since October 2026 |
+| **GPT Realtime 2.1** | Plays the buyer over a direct WebRTC audio connection, in a voice chosen per persona. Two deployments of the same model: the faster Data Zone deployment is the primary pool, and a slower Global Standard deployment is the overflow, used when the primary is full. Live transcription has run on the transcription model's successor since early October 2026 |
 | **Observer** | Joins every call over a server-side channel before any audio flows, and a call it cannot join does not start. It captures the transcript that gets graded, re-asserts the persona if a browser tampers with the session, and records the voice setting the service reports |
 | **Service Bus + grading worker** | Duplicates dropped, failures kept. A reasoning model on Azure OpenAI judges under a strict schema; code recomputes every total, bonus and band; calls spread over a pool of model deployments with failover |
 | **Outputs** | Coaching email, stored report, and an analytics record for office-level trends |
@@ -102,27 +102,26 @@ The product runs on Azure, with every environment defined in Bicep; analytics la
 | [D1: Voice stack](docs/decisions/01-first-voice-stack-and-direct-webrtc.md) | Start on a voice platform, then build a direct WebRTC connection to Azure OpenAI | Once the realtime models matured on Azure OpenAI, the only lock-in left was the media transport |
 | [D2: One voice](docs/decisions/02-split-pipeline-and-one-voice-check.md) | First design: split the voice pipeline so each persona kept one voice; replaced in August 2026 | A buyer who stops sounding like the same person breaks the exercise |
 | [D3: Grader audit](docs/decisions/03-grader-audit-and-drift-gate.md) | Realign the grader to the official rubrics, then gate every grader change | Testing found half the outside-sales criteria missing, ten of the twenty |
-| [D4: Coaching rule](docs/decisions/04-coaching-boundary.md) | A policy worked out with the legal and employment teams: office-level trends for coaching, never one representative's score | Franchise owners employ their own staff |
+| [D4: No call audio, no scoreboard](docs/decisions/04-no-call-audio-and-no-scoreboard.md) | Speech becomes text as the representative talks and only the text is graded; nobody listens in, and nothing ranks people | A practice tool that records or ranks people stops feeling like practice |
 | [Two realtime pools](docs/architecture.md#capacity-two-pools-and-one-busy-screen) | The same model on two deployments, the faster one first, and a single busy screen with a retry countdown once both are full | Azure slows calls already in progress once a deployment's token rate is exceeded, rather than refusing new ones |
 | [Model retirements](docs/architecture.md#model-retirements-planned-ahead) | Treat each retirement date as a scheduled product risk | A retired transcriber fails silently: the call still works, but no report arrives |
 | [Honest practice](docs/architecture.md#honest-practice-by-construction) | Instructions never reach the browser; the server captures the transcript | Blind practice holds even if a browser is tampered with |
-| [No call audio kept](docs/architecture.md#privacy-by-design) | Speech becomes text as the representative talks; only the text is graded | There is no recording to keep, and nobody listens to sessions |
 
 ## Quality and Testing
 
 - **The arithmetic is pinned.** 101 tests fix the scoring math, five of them in a gate that checks that rewording a criterion cannot move a score. They run on every pull request and every push.
 - **Every grader change replays reference transcripts.** A required check grades fourteen reference transcripts three times each on the live staging grader and blocks the merge if scores drift beyond a noise-aware tolerance; nine red-team cases (prompt injection, score manipulation) must hold. It also runs weekly to catch drift in the model itself.
-- **Hard calls are scored against their own goal.** Closing skill is judged against each persona's expected outcome rather than whether the AI agreed, the total is never curved, and the change went live only after eight of nine personas held within model noise.
-- **Every deploy is checked.** Staging first, then production behind three approval gates, only one of which moves traffic. Container images fail the build on any fixable high or critical vulnerability; an end-to-end grading smoke test runs on staging; the voice routes are smoke-tested after every deploy.
+- **Hard calls are scored against their own goal.** Closing skill is judged against each persona's expected outcome rather than whether the AI agreed, and the total is never curved. The change went live only after a calibration in which eight of nine personas held within model noise; the ninth moved a little more and was reviewed and accepted.
+- **Every deploy is checked.** Staging first, then production behind three approval gates, only one of which moves traffic, and that one is approved in a quiet window. Container images fail the build on any fixable high or critical vulnerability; an end-to-end grading smoke test runs on staging; the voice routes are smoke-tested after every deploy.
 - **Infrastructure before code.** A deploy is blocked until any infrastructure change it carries has been applied to both staging and production, and documentation-only merges deploy nothing.
 
 Detail: [docs/testing.md](docs/testing.md) and [docs/evals.md](docs/evals.md).
 
 ## Rollout
 
-- **Pilots, summer 2026.** I ran two pilot phases with franchise offices and sat with representatives as they used it. Every pilot request was logged with a disposition and a reason: done, building, planned, deferred or not building. The pilots added difficulty levels and fuller reports, and the cast grew to nine buyer personas.
-- **Launch in waves.** A slow rollout opened in August 2026 with batched onboarding, pilot offices first; each office passes a scripted go-live check before it opens.
-- **Into the franchise portal.** In September I moved Connect inside the franchise portal by standing up a second front door beside the live one, so the old address kept serving until a redirect moved everyone across on the eve of the portal launch. Sign-in moved to the portal's single sign-on, and the rollout continues across the network in waves.
+- **Pilots, summer 2026.** I ran two pilot phases with franchise offices and sat with representatives as they used it. By the August closeout, nearly every major suggestion had shipped, was being fixed before release or had a documented product decision. The pilots grew the buyer personas from six to nine and added difficulty levels and fuller coaching reports.
+- **Launch in waves.** A slow rollout opened in August 2026 with batched onboarding, pilot offices first, and widened across the network in waves from the September portal launch. Each office passes a scripted go-live check before it opens.
+- **Into the franchise portal.** In September I moved Connect inside the franchise portal by standing up a second front door beside the live one, so the old address kept serving until a redirect moved everyone across on the eve of the portal launch. Sign-in moved to the portal's single sign-on.
 
 ## What I Learned
 
@@ -144,7 +143,7 @@ Detail: [docs/testing.md](docs/testing.md) and [docs/evals.md](docs/evals.md).
 | Franchise pilots, June and July 2026 | Done |
 | Direct WebRTC voice path, July and August 2026 | Done |
 | Franchise portal relaunch and first stack retired, September 2026 | Done |
-| Two realtime pools and the transcription successor, October 2026 | Done |
+| Two realtime pools and the transcription successor, October 2026 | Live in production |
 | Grader successor | Deployed and switched off; a side-by-side comparison of real reports comes before the switch |
 | Rollout across the franchise network | In progress, in waves |
 

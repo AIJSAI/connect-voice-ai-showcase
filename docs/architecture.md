@@ -23,6 +23,7 @@ sequenceDiagram
     participant R as GPT realtime (Azure OpenAI)
     participant O as Observer
     participant S as Blob Storage
+    participant Q as Grading queue
     participant G as Grader
 
     B->>W: Open a session (signed in through the portal's single sign-on)
@@ -42,7 +43,8 @@ sequenceDiagram
     R-->>O: Transcript events, session state, reported voice setting
     O->>R: Re-assert the persona if the session was changed
     O->>S: Authoritative transcript at hang-up
-    S->>G: Blob event starts grading
+    S->>Q: Blob event enqueues the session
+    Q->>G: Worker takes the message and grades it
     G-->>B: Coaching report by email, about two minutes later
 ```
 
@@ -58,11 +60,11 @@ sequenceDiagram
 
 ## Capacity: Two Pools and One Busy Screen
 
-Live calls run on two deployments of the same realtime model. In scripted test calls against the production deployments in October 2026, the model's median time from the end of the representative's speech to the start of its reply was about 0.6 seconds on the Data Zone deployment and about 2 seconds on the Global Standard deployment of the same model, so the faster one became the primary pool and live calls go to it first. These are medians from scripted test calls, not from live traffic, and a call goes to the overflow pool only when the primary is full or turns it away for capacity.
+Live calls run on two deployments of the same realtime model. In scripted test calls against the production deployments in October 2026, the model's median time from the end of the representative's speech to the start of its reply was about 0.6 seconds on the Data Zone deployment and about 2 seconds on the Global Standard deployment of the same model, so the faster one became the primary pool and live calls go to it first. These are medians from scripted test calls, not from live traffic. The overflow pool trades speed for availability: it answers more slowly, and it takes a call only when the primary is full or turns it away for capacity, so that call goes ahead instead of being refused.
 
 A staging drill showed that once a deployment's token rate is exceeded, Azure slows the calls already in progress rather than refusing new ones: a unit of realtime capacity behaves as a rate, not a seat. So instead of raising the call ceiling on one deployment, I added a second realtime pool on quota the company already held, and admission is decided before a call starts. Each call is admitted to the faster pool first and the overflow pool second. Once both are full, new calls are turned away with one busy screen and a retry countdown before they could slow the calls already in progress.
 
-Leaving the first voice stack was never mainly about speed: the expected gain was well under a fifth of a second, because model inference dominates the turn.
+Leaving the first voice stack was never mainly about speed: the expected gain was well under a fifth of a second, because model inference dominates the turn. The reasons were owning the product's scaling, paying no voice-platform fees and staying inside the Azure boundary; see [D1](decisions/01-first-voice-stack-and-direct-webrtc.md).
 
 ## Honest Practice by Construction
 
@@ -100,10 +102,10 @@ Each graded session produces three things:
 ## Privacy by Design
 
 - **No call audio is kept.** Speech becomes text as the representative talks, and only the text is graded.
-- **Nobody listens to sessions.** There is no scoreboard and no ranking.
-- **Erasure requests** cover the voice-path stores.
+- **Nobody listens to sessions,** live or afterward.
+- **There is no scoreboard and no ranking.**
 
-How corporate coaches may use a score is a separate matter. Their rule, office-level trends and never one representative's score, is a policy worked out with the company's legal and employment teams, not something the product enforces; see [D4](decisions/04-coaching-boundary.md).
+The reasoning is in [D4](decisions/04-no-call-audio-and-no-scoreboard.md).
 
 ## Inside the Franchise Portal
 

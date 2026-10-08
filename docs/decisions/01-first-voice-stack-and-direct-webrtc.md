@@ -40,10 +40,10 @@ The decision was first recorded as the target for whenever the product left the 
 
 The move was staged so that each step could be undone:
 
-1. **A capture-parity spike** checked that the server-side capture on the direct path matched the old path: 18 of 18 runs passed.
+1. **A capture-parity sweep** in July 2026 checked that the server-side capture on the direct path matched the old path: six scripted scenarios, three runs each, and all 18 runs passed.
 2. **Built dark.** The session service, browser client, observer and capacity ledger shipped dormant behind a flag.
 3. **Compared side by side.** A 112-session staging comparison of the old and new paths, across two model versions and scored by the same grader, came back green for the new path on the newer model.
-4. **Switched** in August 2026, with the first stack kept as a hot fallback, a detector for a model that goes silent, and a microphone check before each call. On the day the slow rollout opened, a dry run passed 18 of 18 sessions on the new path.
+4. **Switched** in August 2026, with the first stack kept as a hot fallback, a detector for a model that goes silent, and a microphone check before each call. On the day the slow rollout opened, an onboarding dry run in production, two sessions with each of the nine personas, passed all 18 on the new path.
 5. **Proved on production traffic before retiring.** An audit a month later showed the fallback had gone unused. I decided to run the new path only, and decommissioned the first stack's agents, the fallback and the platform project.
 
 ## Consequences

@@ -6,7 +6,7 @@ How Connect, a real-time voice AI sales role-play platform, is tested, deployed 
 
 ## The Suite
 
-More than five thousand test definitions across three layers (a static count, October 2026):
+More than five thousand test definitions across three layers (a static count of the code in October 2026; parametrized tests expand further when they run):
 
 | Layer | What it covers |
 |-------|----------------|
@@ -14,14 +14,13 @@ More than five thousand test definitions across three layers (a static count, Oc
 | Web unit tests (Vitest) | The web tier, the session service and the browser client |
 | Browser end-to-end (Playwright) | End-to-end flows in a real browser |
 
-The suite grew with the product, from 199 passing tests right after the February 2026 rubric realignment to more than a thousand by June.
 
 ## Score Tests
 
 The grader's arithmetic is pinned by 101 deterministic tests, separate from any model call:
 
-- **96 tests across thirteen score classes:** score bands for each rubric, rounding and floating-point edges, normalization to a common scale, bonus caps, per-criterion point enforcement, score floors, total validation, difficulty bands, and the edges between bands.
-- **5 tests in an inertness gate** that check that rewording a criterion cannot move a score, so editing how a criterion is phrased does not change a representative's result.
+- **96 tests in thirteen test classes,** covering score bands for each rubric, rounding and floating-point edges, normalization to a common scale, bonus caps, per-criterion point enforcement, score floors, total validation, difficulty bands, and the edges between bands.
+- **5 tests in an inertness gate** that check that rewording a criterion cannot change the score arithmetic. How the model reads a reworded criterion is the live eval gate's job.
 
 They run in the Python CI job on every pull request and every push.
 
@@ -33,10 +32,10 @@ They run in the Python CI job on every pull request and every push.
 
 ## On Every Deploy
 
-- **Every product change deploys to staging, then to production.** Production deploys pass three approval gates, and only one of them moves traffic; I approve it in a quiet window. Documentation-only merges deploy nothing.
+- **Every product change deploys to staging, then to production.** Production deploys pass three approval gates, and only one of them moves traffic; it is approved in a quiet window. Documentation-only merges deploy nothing.
 - **Infrastructure before code.** A deploy is blocked until any infrastructure change it carries has been applied to both staging and production.
 - **Container images fail the build** on any fixable high or critical vulnerability.
-- **Staging deploys run a real grading smoke test,** end to end, through the actual grader.
+- **Staging deploys run a grading smoke test** end to end, through the deployed staging grader.
 - **The voice routes are smoke-tested** after each deploy.
 - **Rollback is a per-app image update.** Re-running an old deploy is not a rollback, and the runbook says so.
 
@@ -44,12 +43,12 @@ They run in the Python CI job on every pull request and every push.
 
 The live half is tested the way a representative uses it:
 
-- **Before the move to direct WebRTC:** a capture-parity spike (18 of 18 runs), then a 112-session staging comparison of the old and new paths across two model versions, scored by the same grader. See [D1](decisions/01-first-voice-stack-and-direct-webrtc.md).
-- **Launch-day dry run:** 18 of 18 sessions passed on the new path.
+- **Before the move to direct WebRTC:** a capture-parity sweep (six scenarios, three runs each, all 18 passed), then a 112-session staging comparison of the old and new paths across two model versions, scored by the same grader. See [D1](decisions/01-first-voice-stack-and-direct-webrtc.md).
+- **Onboarding dry run, August 18, 2026:** two production sessions with each of the nine personas, all 18 passed on the new path.
 - **A detector for a model that goes silent, and a microphone check before each call.**
-- **Per-office go-live:** each office passes a scripted smoke test through the real product path before it opens.
-- **Pools and the busy screen:** a staging drill showed Azure letting calls past a deployment's capacity and slowing them instead of refusing them, which is why the product decides admission to each realtime pool before a call starts and shows one busy screen once both are full.
-- **Deployments measured, not assumed:** scripted test calls measured the realtime model on both production deployments before the faster one became the primary pool, and a bake-off on scripted calls picked the transcription successor. See [architecture](architecture.md#capacity-two-pools-and-one-busy-screen).
+- **Per-office go-live:** each office passes a scripted smoke test through the same sign-in and call path a representative uses before it opens.
+- **Pools and the busy screen:** a first staging drill showed Azure letting calls past a deployment's capacity and slowing them instead of refusing them, which is why the product decides admission to each realtime pool before a call starts. A second drill, before the pools went live in production, sent the first call to the primary pool and the second to the overflow, and turned the next ones away with the busy screen.
+- **Deployments compared:** scripted test calls measured the realtime model on both production deployments before the faster one became the primary pool, and a bake-off on scripted calls picked the transcription successor. See [architecture](architecture.md#capacity-two-pools-and-one-busy-screen).
 - **One voice per session:** the observer records the voice setting the realtime service reports for every conversation item, and a dashboard flags any session where it changed. See [D2](decisions/02-split-pipeline-and-one-voice-check.md).
 
 In the first design, the one-second round trip was a hard merge gate for the voice pipeline.
@@ -61,7 +60,7 @@ In the first design, the one-second round trip was a hard merge gate for the voi
 
 ## Security Review
 
-In July 2026, ahead of any real client data, I commissioned a security and privacy review of the product mapped to NIST 800-53, run by AI review agents with an adversarial verification pass. The first remediation wave shipped within days: pull-request-only changes behind nine required checks, every workflow action pinned, a dead-letter retention policy, and fencing in the grader so that a transcript is treated as content to grade, not as instructions.
+In July 2026 I commissioned a security and privacy review of the product, mapped to NIST 800-53 and run by AI review agents with an adversarial verification pass.
 
 ## How It Was Built
 
