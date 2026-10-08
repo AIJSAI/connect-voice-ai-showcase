@@ -31,7 +31,7 @@ None of this showed up as an error. The grader returned confident, complete-look
 Two layers, one deterministic and one live:
 
 1. **The arithmetic is pinned.** 101 tests fix the scoring math across bands, rounding, normalization, bonus caps, point enforcement, floors and totals, and the mapping to the difficulty label, which never changes a score; five of them form a gate that checks that rewording a criterion cannot move a score. They run on every pull request and every push.
-2. **The judgment is replayed (since July 2026).** A required check runs on every pull request. When grader content changes (prompts, scoring code, rubrics, schemas or eval fixtures), it replays fourteen reference transcripts across eight personas, three times each, against the live staging grader, and fails the merge if the mean score drifts beyond a per-transcript tolerance that widens with measured run-to-run noise above a fixed floor. The reference scores are the grader's own, recorded on staging in July 2026, so the gate catches any change from that baseline; agreement with human grades is what the report-only golden set will measure once those grades are final. A persona added after the baseline was recorded has no reference transcript yet. Nine red-team cases, including prompt injection and score manipulation, must hold. The same check runs weekly, because a model can drift with no change on our side.
+2. **The judgment is replayed (since July 2026).** A required check runs on every pull request. When grader content changes (prompts, scoring code, rubrics, schemas or eval fixtures), it replays fourteen reference transcripts across eight personas, three times each, against the live staging grader, and fails the merge if the mean score drifts beyond a per-transcript tolerance that widens with measured run-to-run noise above a fixed floor. The reference scores are the grader's own, recorded on staging in July 2026, so the gate catches any change from that baseline; agreement with human grades is what the report-only golden set will measure once those grades are final. One of the nine personas has no reference transcript yet. Nine red-team cases, including prompt injection and score manipulation, must hold. The same check runs weekly, because a model can drift with no change on our side.
 
 Details of both layers are in [testing](../testing.md) and [evals](../evals.md).
 
@@ -42,10 +42,10 @@ Hard personas are written to decline. Grading a hard call on whether the AI said
 ## Consequences
 
 - **(+)** Scores mirror the official rubric's structure, and the business's rubric owners approved the mapping.
-- **(+)** A change to the grader cannot merge on the strength of looking right; it has to score within tolerance of the reference scores.
+- **(+)** A change to the grader's prompts, scoring code, rubrics or schemas cannot merge on the strength of looking right; it has to score within tolerance of the reference scores. The weekly run covers changes on the model's side.
 - **(+)** Prompt injection and score manipulation are tested on every grader change, not assumed away.
 - **(-)** The live replay costs paid model calls and time, so it runs only when grader content changes, plus a weekly run instead of a daily one.
-- **(-)** Some dimensions (consistency, coaching quality, evidence grounding, a golden set) stay report-only until human grades are final, so today they inform rather than block.
+- **(-)** Some dimensions (consistency, coaching quality, evidence grounding, a draft golden set) are report-only today, so they inform rather than block; the golden set waits on final human grades.
 
 ---
 

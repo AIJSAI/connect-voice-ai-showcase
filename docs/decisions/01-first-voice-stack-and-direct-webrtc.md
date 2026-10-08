@@ -24,7 +24,7 @@ The dependency was the media transport, not the model. The model was already Azu
 |--------|---------|
 | Stay on the first stack | Workable, but the company would pay a platform fee that grows with the network for a layer it no longer needed |
 | An alternate Azure voice engine behind the same transport | Tried in June and July. It kept the first stack's transport, so it removed neither the dependency nor the fee, and its parity checks never went green |
-| Connect to OpenAI directly | Rejected: it would take the product outside the Azure compliance boundary it already runs inside |
+| Connect to OpenAI directly | Rejected: the product's model calls stay on Azure OpenAI, inside the Azure environment the rest of the product runs in |
 | **Azure OpenAI's own browser-direct WebRTC** | **Chosen** |
 
 ## Decision
@@ -43,14 +43,14 @@ The move was staged so that each step could be undone:
 1. **A capture-parity sweep** in July 2026 checked that the server-side capture on the direct path matched the old path: six scripted scenarios, three runs each, and all 18 runs passed.
 2. **Built dark.** The session service, browser client, observer and capacity ledger shipped dormant behind a flag.
 3. **Compared side by side.** A 112-session staging comparison of the old and new paths, across two model versions and scored by the same grader, came back green for the new path on the newer model.
-4. **Switched** in August 2026, with the first stack kept as a hot fallback, a detector for a model that goes silent, and a microphone check before each call. On the day the slow rollout opened, an onboarding dry run in production, two sessions with each of the nine personas, passed all 18 on the new path.
+4. **Switched** in August 2026, with the first stack kept as a hot fallback, a detector for a model that goes silent, and a microphone check before each call. On August 18, 2026, the day the slow rollout opened, an onboarding dry run in production, two sessions with each of the nine personas, passed all 18 on the new path.
 5. **Proved on production traffic before retiring.** An audit a month later showed the fallback had gone unused. I decided to run the new path only, and decommissioned the first stack's agents, the fallback and the platform project.
 
 ## Consequences
 
 - **(+)** The company owns its scaling, within its own Azure quota, and pays no voice-platform fees.
 - **(+)** One fewer vendor and one fewer hop between a representative and the buyer.
-- **(+)** The product stays inside the Azure boundary it already runs in.
+- **(+)** The live audio path now runs on the same Azure platform as the rest of the product.
 - **(-)** Little expected latency gain: well under a fifth of a second, because model inference dominates a turn. Speed was never the reason.
 - **(-)** The browser now holds the media connection, so the observer exists to keep the transcript and the persona authoritative. See [honest practice](../architecture.md#honest-practice-by-construction).
 - **(-)** Azure offers realtime WebRTC in a limited set of regions, so capacity is planned per deployment: two pools of the same model, the faster one first, and one busy screen with a retry countdown once both are full. See [capacity](../architecture.md#capacity-two-pools-and-one-busy-screen).

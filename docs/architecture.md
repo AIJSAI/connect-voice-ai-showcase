@@ -14,7 +14,7 @@ So Connect is two halves that never call each other:
 - **The grading half** scores the finished transcript and sends the report.
 - **Storage is the only link.** When a call ends, its transcript lands in Blob Storage, and that event starts grading.
 
-The split was decided before the build began, against the one-second target, and survived the rebuild of the voice path unchanged.
+The two-halves design was decided before the build began, against the one-second target, and survived the rebuild of the voice path unchanged.
 
 ```mermaid
 sequenceDiagram
@@ -60,17 +60,17 @@ sequenceDiagram
 
 ## Capacity: Two Pools and One Busy Screen
 
-Live calls run on two deployments of the same realtime model. In scripted test calls against the production deployments in October 2026, the model's median time from the end of the representative's speech to the start of its reply was about 0.6 seconds on the Data Zone deployment and about 2 seconds on the Global Standard deployment of the same model, so the faster one became the primary pool and live calls go to it first. These are medians from scripted test calls, not from live traffic. The overflow pool trades speed for availability: it answers more slowly, and it takes a call only when the primary is full or turns it away for capacity, so that call goes ahead instead of being refused.
+Live calls run on two deployments of the same realtime model. In scripted test calls against the production deployments in October 2026, the model's median time from the end of the representative's speech to the start of its reply was about 0.6 seconds on the Data Zone deployment and about 2 seconds on the Global Standard deployment of the same model, so the faster one became the primary pool and live calls go to it first. These are medians from scripted test calls, not from live traffic, and they measure the model's reply on the server, not the full round trip that the one-second design target describes. The overflow pool trades speed for availability: it answers more slowly, and it takes a call only when the primary is full or turns it away for capacity, so that call goes ahead instead of being refused.
 
 A staging drill showed that once a deployment's token rate is exceeded, Azure slows the calls already in progress rather than refusing new ones: a unit of realtime capacity behaves as a rate, not a seat. So instead of raising the call ceiling on one deployment, I added a second realtime pool on quota the company already held, and admission is decided before a call starts. Each call is admitted to the faster pool first and the overflow pool second. Once both are full, new calls are turned away with one busy screen and a retry countdown before they could slow the calls already in progress.
 
-Leaving the first voice stack was never mainly about speed: the expected gain was well under a fifth of a second, because model inference dominates the turn. The reasons were owning the product's scaling, paying no voice-platform fees and staying inside the Azure boundary; see [D1](decisions/01-first-voice-stack-and-direct-webrtc.md).
+Leaving the first voice stack was never mainly about speed: the expected gain was well under a fifth of a second, because model inference dominates the turn. The reasons were owning the product's scaling and paying no voice-platform fees; see [D1](decisions/01-first-voice-stack-and-direct-webrtc.md).
 
 ## Honest Practice by Construction
 
 A practice tool is only useful if its scores mean something, so the live half is designed so that gaming it does not work, rather than asking people not to try:
 
-- **Blind practice holds.** The persona's identity and instructions travel only from the server to Azure. On inside-sales calls the representative cannot find out in advance who will answer.
+- **Blind practice holds.** The persona's instructions travel only from the server to Azure, never to the browser. Inside-sales calls are blind: the persona's identity stays on the server too, and is revealed only after the call, so the representative cannot find out in advance who will answer. Outside-sales calls are guided and show who the representative is calling.
 - **Tampering is undone.** If a browser tries to change the session, the observer detects the divergence and re-asserts the persona's settings from the server.
 - **The graded transcript is the server's.** A transcript posted by a browser could be forged, so the product never accepts one. The observer's capture is the only one graded.
 
@@ -105,7 +105,7 @@ Each graded session produces three things:
 - **Nobody listens to sessions,** live or afterward.
 - **There is no scoreboard and no ranking.**
 
-The reasoning is in [D4](decisions/04-no-call-audio-and-no-scoreboard.md).
+These choices cover audio and ranking. The written transcript and report are kept and emailed, and the terms of use each person accepts say who receives them. The reasoning is in [D4](decisions/04-no-call-audio-and-no-scoreboard.md).
 
 ## Inside the Franchise Portal
 
@@ -136,7 +136,7 @@ Azure offers realtime WebRTC in a limited set of regions, so the region and the 
 |------|--------------|
 | Before the build | The two-halves split decided against the one-second target |
 | January 2026 | First commit. The first production stack ran on LiveKit Cloud, which carried the audio to an agent worker that drove Azure OpenAI's realtime model |
-| May 2026 | The voice pipeline split to keep one voice per persona ([D2](decisions/02-split-pipeline-and-one-voice-check.md)) |
+| May 2026 | A separate speech engine added to keep one voice per persona ([D2](decisions/02-split-pipeline-and-one-voice-check.md)) |
 | June and July 2026 | Franchise pilots; grading moved onto a Service Bus queue |
 | July 2026 | Decision to move to Azure OpenAI's own browser-direct WebRTC; the new path built dark behind a flag |
 | August 2026 | Live calls moved to the new path, with the first stack kept as a hot fallback ([D1](decisions/01-first-voice-stack-and-direct-webrtc.md)) |

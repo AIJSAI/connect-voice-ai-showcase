@@ -22,9 +22,9 @@ The AI plays the buyer; it does not coach. The coaching lives in the graded repo
 
 Franchise offices had been paying for outside role-play tools or role-playing with each other, and the feedback depended on who happened to be coaching. Three constraints shaped the answer:
 
-1. **Latency.** A spoken conversation breaks when the other side pauses, so the buyer is built to answer within a one-second round trip.
+1. **Latency.** A spoken conversation breaks when the other side pauses, so the buyer is built against a design target of a one-second round trip.
 2. **Grading depth.** Scoring a transcript against a multi-category rubric takes a reasoning model about a minute. That cannot sit inside a conversation.
-3. **A regulated setting.** In-home senior care is HIPAA-regulated, and each franchise owner employs their own staff, so privacy shaped the design from the start ([D4](docs/decisions/04-no-call-audio-and-no-scoreboard.md)).
+3. **A regulated setting.** In-home senior care is HIPAA-regulated, and each franchise owner employs their own staff, so privacy shaped the design ([D4](docs/decisions/04-no-call-audio-and-no-scoreboard.md)).
 
 ## Architecture
 
@@ -85,7 +85,7 @@ flowchart LR
 | Component | What it does |
 |-----------|--------------|
 | **Web tier** | Served inside the franchise portal, behind the portal's single sign-on. Admits each call to a realtime pool, mints a short-lived session carrying the persona's instructions, and relays the WebRTC handshake; the browser never holds a key or sees the instructions |
-| **GPT Realtime 2.1** | Plays the buyer over a direct WebRTC audio connection, in a voice chosen per persona. Two deployments of the same model: the faster Data Zone deployment is the primary pool, and a slower Global Standard deployment is the overflow, used when the primary is full. Live transcription has run on the transcription model's successor since early October 2026 |
+| **GPT Realtime 2.1** | Plays the buyer over a direct WebRTC audio connection, in a voice chosen per persona. Two deployments of the same model: the faster Data Zone deployment is the primary pool, and a slower Global Standard deployment takes calls when the primary is full, trading speed for availability. Live transcription has run on the transcription model's successor since early October 2026 |
 | **Observer** | Joins every call over a server-side channel before any audio flows, and a call it cannot join does not start. It captures the transcript that gets graded, re-asserts the persona if a browser tampers with the session, and records the voice setting the service reports |
 | **Service Bus + grading worker** | Duplicates dropped, failures kept. A reasoning model on Azure OpenAI judges under a strict schema; code recomputes every total, bonus and band; calls spread over a pool of model deployments with failover |
 | **Outputs** | Coaching email, stored report, and an analytics record for office-level trends |
@@ -102,7 +102,7 @@ The product runs on Azure, with every environment defined in Bicep; analytics la
 | [D1: Voice stack](docs/decisions/01-first-voice-stack-and-direct-webrtc.md) | Start on a voice platform, then build a direct WebRTC connection to Azure OpenAI | Once the realtime models matured on Azure OpenAI, the only lock-in left was the media transport |
 | [D2: One voice](docs/decisions/02-split-pipeline-and-one-voice-check.md) | First design: split the voice pipeline so each persona kept one voice; replaced in August 2026 | A buyer who stops sounding like the same person breaks the exercise |
 | [D3: Grader audit](docs/decisions/03-grader-audit-and-drift-gate.md) | Realign the grader to the official rubrics, then gate every grader change | Testing found half the outside-sales criteria missing, ten of the twenty |
-| [D4: No call audio, no scoreboard](docs/decisions/04-no-call-audio-and-no-scoreboard.md) | Speech becomes text as the representative talks and only the text is graded; nobody listens in, and nothing ranks people | A practice tool that records or ranks people stops feeling like practice |
+| [D4: No call audio, no scoreboard](docs/decisions/04-no-call-audio-and-no-scoreboard.md) | Speech becomes text as the representative talks and only the text is graded; nobody listens in, and nothing ranks people | A practice tool that keeps recordings of people's voices, or ranks them, stops feeling like practice |
 | [Two realtime pools](docs/architecture.md#capacity-two-pools-and-one-busy-screen) | The same model on two deployments, the faster one first, and a single busy screen with a retry countdown once both are full | Azure slows calls already in progress once a deployment's token rate is exceeded, rather than refusing new ones |
 | [Model retirements](docs/architecture.md#model-retirements-planned-ahead) | Treat each retirement date as a scheduled product risk | A retired transcriber fails silently: the call still works, but no report arrives |
 | [Honest practice](docs/architecture.md#honest-practice-by-construction) | Instructions never reach the browser; the server captures the transcript | Blind practice holds even if a browser is tampered with |
@@ -120,7 +120,7 @@ Detail: [docs/testing.md](docs/testing.md) and [docs/evals.md](docs/evals.md).
 ## Rollout
 
 - **Pilots, summer 2026.** I ran two pilot phases with franchise offices and sat with representatives as they used it. By the August closeout, nearly every major suggestion had shipped, was being fixed before release or had a documented product decision. The pilots grew the buyer personas from six to nine and added difficulty levels and fuller coaching reports.
-- **Launch in waves.** A slow rollout opened in August 2026 with batched onboarding, pilot offices first, and widened across the network in waves from the September portal launch. Each office passes a scripted go-live check before it opens.
+- **Launch in waves.** A slow rollout opened on August 18, 2026, with batched onboarding, pilot offices first, and widened across the network in waves from the portal launch on September 22. Each office passes a scripted go-live check before it opens.
 - **Into the franchise portal.** In September I moved Connect inside the franchise portal by standing up a second front door beside the live one, so the old address kept serving until a redirect moved everyone across on the eve of the portal launch. Sign-in moved to the portal's single sign-on.
 
 ## What I Learned
@@ -133,7 +133,7 @@ Detail: [docs/testing.md](docs/testing.md) and [docs/evals.md](docs/evals.md).
 ## Roadmap
 
 - **The grader's next model.** The grading model's named successor is deployed and switched off. Shadow grading is built so real reports can be compared side by side before the switch, which is one setting. A dated check, run both as an alert rule and as a daily scheduled job, goes red if any grade still runs on the current model from nine days before its retirement.
-- **Report-only evals** (consistency, coaching quality, evidence grounding, a golden set) become blocking once human grades are final.
+- **Report-only evals.** Consistency, coaching quality, evidence grounding and a draft golden set run today without blocking a merge; the golden set becomes blocking once its human grades are final.
 
 ## Project Status
 

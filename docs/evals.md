@@ -13,7 +13,7 @@ The live gate below measures drift from a baseline, and the baseline had to be r
 Since July 2026 this is a required check on every pull request. It replays the reference transcripts when a pull request changes grader content, and passes without a replay when it does not.
 
 - **When it runs.** Whenever grader content changes: prompts, scoring code, rubrics, schemas or eval fixtures. It also runs weekly, to catch drift in the model when nothing on the product side changed.
-- **What it replays.** Fourteen reference transcripts spread across eight buyer personas, each graded three times against the live staging grader. A persona added after the baseline was recorded has no reference transcript yet.
+- **What it replays.** Fourteen reference transcripts spread across eight buyer personas, each graded three times against the live staging grader. One of the nine personas has no reference transcript yet.
 - **What fails it.** A mean score that drifts beyond a per-transcript tolerance. The tolerance widens with the measured run-to-run noise of that transcript, above a fixed floor, so a naturally noisy transcript does not raise false alarms.
 - **Why weekly and not daily.** Each run makes paid model calls, and a weekly schedule makes one run where a daily one would make seven.
 
@@ -27,7 +27,7 @@ Difficulty-aware grading judges closing skill against each persona's expected ou
 
 ## Report-Only Dimensions
 
-Four more measures run today but do not block a merge: consistency, coaching quality, evidence grounding, and a draft golden set. They become blocking once the human grades behind them are final; until then they inform rather than gate.
+Four more measures run today but do not block a merge: consistency, coaching quality, evidence grounding, and a draft golden set. The golden set becomes blocking once the human grades behind it are final; until then these measures inform rather than gate.
 
 ## Model Changes
 
