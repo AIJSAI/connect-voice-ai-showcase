@@ -1,6 +1,6 @@
 # Connect
 
-> A real-time voice AI sales role-play platform. Sales representatives in a 480+ location in-home senior-care franchise network practice spoken calls against AI buyer personas, and a separate AI grader scores each finished call against the company's own sales rubric. I built it alone from its first commit in January 2026, then ran its pilots and much of the rollout.
+> A real-time voice AI sales role-play platform for a 480+ location in-home senior-care franchise network, rolling out to its offices in waves. Sales representatives practice spoken calls against AI buyer personas, and a separate AI grader scores each finished call against the company's own sales rubric. I built it alone from its first commit in January 2026, then ran its pilots and much of the rollout.
 
 ---
 
