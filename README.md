@@ -1,6 +1,6 @@
 # Connect
 
-> A real-time voice AI sales role-play platform for a 480+ location in-home senior-care franchise network, rolling out to its offices in waves. Sales representatives practice spoken calls against AI buyer personas, and a separate AI grader scores each finished call against the company's own sales rubric. I built it alone from its first commit in January 2026, then ran its pilots and much of the rollout.
+> A real-time voice AI sales role-play platform built for a 480+ location in-home senior-care franchise network, where offices are enabled one by one as each signs its agreement. Sales representatives practice spoken calls against AI buyer personas, and a separate AI grader scores each finished call against the company's own sales rubrics for inside and outside sales. I built it alone from its first commit in January 2026, then ran its pilots and much of the rollout.
 
 ---
 
@@ -132,14 +132,14 @@ Detail: [docs/testing.md](docs/testing.md) and [docs/evals.md](docs/evals.md).
 
 ## Roadmap
 
-- **The grader's next model.** The grading model's named successor is deployed and switched off. Shadow grading is built so real reports can be compared side by side before the switch, which is one setting. A dated check, run both as an alert rule and as a daily scheduled job, goes red if any grade still runs on the current model from nine days before its retirement.
+- **The grader's next model.** As of October 2026, the grading model's successor is deployed and switched off. Shadow grading is built so real reports can be compared side by side before the switch, which is one setting. A dated check, run both as an alert rule and as a daily scheduled job, goes red if any grade still runs on the current model from nine days before its retirement.
 - **Report-only evals.** Consistency, coaching quality, evidence grounding and a draft golden set run today without blocking a merge; the golden set becomes blocking once its human grades are final.
 
 ## Project Status
 
 | Phase | Status |
 |-------|--------|
-| Build, January to May 2026 | Done |
+| First build, January to May 2026 | Done |
 | Franchise pilots, June and July 2026 | Done |
 | Direct WebRTC voice path, July and August 2026 | Done |
 | Franchise portal relaunch and first stack retired, September 2026 | Done |

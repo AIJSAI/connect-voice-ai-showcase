@@ -8,7 +8,7 @@
 
 The grader is the part of Connect, a real-time voice AI sales role-play platform, that a representative has to trust. A score only means something if it matches the rubric representatives are already held to: the company's official inside-sales and outside-sales rubrics.
 
-In February 2026 I tested the AI grader against those rubrics, criterion by criterion, and it had drifted:
+In February 2026 I tested the AI grader against those rubrics, criterion by criterion, and it did not match them:
 
 - **Half the outside-sales criteria were missing,** ten of the twenty.
 - **Inside-sales empathy was weighted at double** what the rubric allowed.
@@ -31,7 +31,7 @@ None of this showed up as an error. The grader returned confident, complete-look
 Two layers, one deterministic and one live:
 
 1. **The arithmetic is pinned.** 101 tests fix the scoring math across bands, rounding, normalization, bonus caps, point enforcement, floors and totals, and the mapping to the difficulty label, which never changes a score; five of them form a gate that checks that rewording a criterion cannot move a score. They run on every pull request and every push.
-2. **The judgment is replayed (since July 2026).** A required check runs on every pull request. When grader content changes (prompts, scoring code, rubrics, schemas or eval fixtures), it replays fourteen reference transcripts across eight personas, three times each, against the live staging grader, and fails the merge if the mean score drifts beyond a per-transcript tolerance that widens with measured run-to-run noise above a fixed floor. The reference scores are the grader's own, recorded on staging in July 2026, so the gate catches any change from that baseline; agreement with human grades is what the report-only golden set will measure once those grades are final. One of the nine personas has no reference transcript yet. Nine red-team cases, including prompt injection and score manipulation, must hold. The same check runs weekly, because a model can drift with no change on our side.
+2. **The judgment is replayed (since July 2026).** A required check runs on every pull request. When grader content changes (prompts, scoring code, rubrics, schemas or eval fixtures), it replays fourteen reference transcripts across eight personas, three times each, against the live staging grader, and fails the merge if the mean score drifts beyond a per-transcript tolerance that widens with measured run-to-run noise above a fixed floor. The reference scores are the grader's own, recorded on staging in July 2026, so the gate catches drift beyond tolerance from that baseline; agreement with human grades is what the report-only golden set will measure once those grades are final. One of the nine personas has no reference transcript yet. Nine red-team cases, including prompt injection and score manipulation, must hold. The same check runs weekly, because a model can drift with no change on our side.
 
 Details of both layers are in [testing](../testing.md) and [evals](../evals.md).
 

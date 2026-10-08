@@ -70,7 +70,7 @@ Leaving the first voice stack was never mainly about speed: the expected gain wa
 
 A practice tool is only useful if its scores mean something, so the live half is designed so that gaming it does not work, rather than asking people not to try:
 
-- **Blind practice holds.** The persona's instructions travel only from the server to Azure, never to the browser. Inside-sales calls are blind: the persona's identity stays on the server too, and is revealed only after the call, so the representative cannot find out in advance who will answer. Outside-sales calls are guided and show who the representative is calling.
+- **Blind practice holds.** The persona's instructions travel only from the server to Azure, never to the browser. Inside-sales calls are blind: the persona's identity stays on the server too, and is revealed only after the call, so the representative cannot find out in advance who is calling. Outside-sales calls are guided and show who the representative is calling.
 - **Tampering is undone.** If a browser tries to change the session, the observer detects the divergence and re-asserts the persona's settings from the server.
 - **The graded transcript is the server's.** A transcript posted by a browser could be forged, so the product never accepts one. The observer's capture is the only one graded.
 
@@ -102,7 +102,7 @@ Each graded session produces three things:
 ## Privacy by Design
 
 - **No call audio is kept.** Speech becomes text as the representative talks, and only the text is graded.
-- **Nobody listens to sessions,** live or afterward.
+- **No person listens to a session,** live or afterward.
 - **There is no scoreboard and no ranking.**
 
 These choices cover audio and ranking. The written transcript and report are kept and emailed, and the terms of use each person accepts say who receives them. The reasoning is in [D4](decisions/04-no-call-audio-and-no-scoreboard.md).
@@ -135,7 +135,7 @@ Azure offers realtime WebRTC in a limited set of regions, so the region and the 
 | When | What changed |
 |------|--------------|
 | Before the build | The two-halves split decided against the one-second target |
-| January 2026 | First commit. The first production stack ran on LiveKit Cloud, which carried the audio to an agent worker that drove Azure OpenAI's realtime model |
+| January 2026 | First commit. From the first week, LiveKit Cloud carried the audio to an agent worker that drove Azure OpenAI's realtime model |
 | May 2026 | A separate speech engine added to keep one voice per persona ([D2](decisions/02-split-pipeline-and-one-voice-check.md)) |
 | June and July 2026 | Franchise pilots; grading moved onto a Service Bus queue |
 | July 2026 | Decision to move to Azure OpenAI's own browser-direct WebRTC; the new path built dark behind a flag |

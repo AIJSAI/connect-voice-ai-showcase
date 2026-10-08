@@ -31,7 +31,7 @@ Four more measures run today but do not block a merge: consistency, coaching qua
 
 ## Model Changes
 
-- **As of October 2026, the grading model's named successor is deployed and switched off.** Shadow grading is built so real reports can be compared side by side before the switch, which is one setting. A dated check, run both as an alert rule and as a daily scheduled job, goes red if any grade still runs on the current model from nine days before its retirement.
+- **As of October 2026, the grading model's successor is deployed and switched off.** Shadow grading is built so real reports can be compared side by side before the switch, which is one setting. A dated check, run both as an alert rule and as a daily scheduled job, goes red if any grade still runs on the current model from nine days before its retirement.
 - **The transcription model** was replaced ahead of its retirement after a bake-off on three scripted calls per candidate, where the successor had no failed transcriptions and a shorter transcript lag (0.58 against 0.72 seconds). See [architecture](architecture.md#model-retirements-planned-ahead).
 - **The realtime model** was evaluated through the voice-path comparison before the production switch: 112 staging sessions in all, a two-by-two comparison of the old and new voice paths on two realtime model versions. The new path came back green on the newer model; on the older model the result was inconclusive, with no failures. See [D1](decisions/01-first-voice-stack-and-direct-webrtc.md).
 

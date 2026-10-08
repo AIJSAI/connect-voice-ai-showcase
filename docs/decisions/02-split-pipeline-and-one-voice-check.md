@@ -36,7 +36,7 @@ Split the pipeline so that speaking was no longer the model's job:
 
 The split did not survive the move to a direct WebRTC connection ([D1](01-first-voice-stack-and-direct-webrtc.md)). On today's path the realtime model speaks in its own built-in voice, chosen per persona when the session is minted, and the separate speech engine is kept only for an end-to-end smoke test.
 
-The check survived in a narrower form. The server-side observer records the voice setting the realtime service reports, for the session and for every conversation item, and a dashboard query flags any session where that reported setting changed. It is shown as a dashboard tile, not an alert. The trade is plain. The split took the voice away from the model. Today's design relies on the model's own voice holding steady, and its check catches a change in the reported voice, not drift inside the model's speech; in the original design the recorded voice stayed fixed even while the audio drifted.
+The check survived in a narrower form. The server-side observer records the voice setting the realtime service reports, for the session and for every conversation item, and a dashboard query flags any session where that reported setting changed. It is shown as a dashboard tile, not an alert. The split took the voice away from the model. Today's design relies on the model's own voice holding steady, and its check catches a change in the reported voice, not drift inside the model's speech; in the original design the recorded voice stayed fixed even while the audio drifted.
 
 ---
 
