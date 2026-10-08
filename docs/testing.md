@@ -14,7 +14,6 @@ More than five thousand test definitions across three layers (a static count of 
 | Web unit tests (Vitest) | The web tier, the session service and the browser client |
 | Browser end-to-end (Playwright) | End-to-end flows in a real browser |
 
-
 ## Score Tests
 
 The grader's arithmetic is pinned by 101 deterministic tests, separate from any model call:
@@ -28,7 +27,7 @@ They run in the Python CI job on every pull request and every push.
 
 - **The main branch is pull-request only,** behind a set of required checks, with squash-only merges.
 - **Every workflow action is pinned to a commit,** not a tag.
-- **The live eval gate** runs as a required check whenever grader content changes. See [evals](evals.md).
+- **The live eval gate** is a required check on every pull request, and it replays reference transcripts when grader content changes. See [evals](evals.md).
 
 ## On Every Deploy
 
@@ -43,7 +42,7 @@ They run in the Python CI job on every pull request and every push.
 
 The live half is tested the way a representative uses it:
 
-- **Before the move to direct WebRTC:** a capture-parity sweep (six scenarios, three runs each, all 18 passed), then a 112-session staging comparison of the old and new paths across two model versions, scored by the same grader. See [D1](decisions/01-first-voice-stack-and-direct-webrtc.md).
+- **Before the move to direct WebRTC:** a capture-parity sweep (six scenarios, three runs each, all 18 passed), then a 112-session staging comparison, two by two, of the old and new paths on two model versions, scored by the same grader. See [D1](decisions/01-first-voice-stack-and-direct-webrtc.md).
 - **Onboarding dry run, August 18, 2026:** two production sessions with each of the nine personas, all 18 passed on the new path.
 - **A detector for a model that goes silent, and a microphone check before each call.**
 - **Per-office go-live:** each office passes a scripted smoke test through the same sign-in and call path a representative uses before it opens.
