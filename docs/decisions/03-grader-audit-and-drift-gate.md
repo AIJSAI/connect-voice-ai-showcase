@@ -30,14 +30,14 @@ None of this showed up as an error. The grader returned confident, complete-look
 
 Two layers, one deterministic and one live:
 
-1. **The arithmetic is pinned.** 101 tests fix the scoring math across bands, rounding, normalization, bonus caps, point enforcement, floors, totals and difficulty bands; five of them form a gate that proves rewording a criterion cannot move a score. They run on every pull request and every push.
-2. **The judgment is replayed (since July 2026).** A required check runs on every pull request. When grader content changes (prompts, scoring code, rubrics, schemas or eval fixtures), it replays fourteen reference transcripts across eight personas, three times each, against the real staging grader, and fails the merge if the mean score drifts beyond a per-transcript tolerance that widens with measured run-to-run noise above a fixed floor. Nine red-team cases, including prompt injection and score manipulation, must hold. The same check runs weekly, because a model can drift with no change on our side.
+1. **The arithmetic is pinned.** 101 tests fix the scoring math across bands, rounding, normalization, bonus caps, point enforcement, floors, totals and difficulty bands; five of them form a gate that checks that rewording a criterion cannot move a score. They run on every pull request and every push.
+2. **The judgment is replayed (since July 2026).** A required check runs on every pull request. When grader content changes (prompts, scoring code, rubrics, schemas or eval fixtures), it replays fourteen reference transcripts across eight personas, three times each, against the live staging grader, and fails the merge if the mean score drifts beyond a per-transcript tolerance that widens with measured run-to-run noise above a fixed floor. Nine red-team cases, including prompt injection and score manipulation, must hold. The same check runs weekly, because a model can drift with no change on our side.
 
 Details of both layers are in [testing](../testing.md) and [evals](../evals.md).
 
 ## Fairness at Each Difficulty
 
-Hard personas are written to decline. Grading a hard call on whether the AI said yes would punish the representative for the persona doing its job. Since July 2026 the grader judges closing skill against each persona's expected outcome, never curves the total, and records difficulty only as a label. It was switched on only after a do-no-harm calibration in which eight of nine personas moved within model noise.
+Hard personas are written to decline. Grading a hard call on whether the AI said yes would punish the representative for the persona doing its job. Since July 2026 the grader judges closing skill against each persona's expected outcome, never curves the total, and records difficulty only as a label. It was switched on only after a do-no-harm calibration in which eight of nine personas moved within model noise; the ninth moved a little more, was reviewed, accepted and kept as a watch item.
 
 ## Consequences
 

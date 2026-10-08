@@ -21,7 +21,7 @@ The suite grew with the product, from 199 passing tests right after the February
 The grader's arithmetic is pinned by 101 deterministic tests, separate from any model call:
 
 - **96 tests across thirteen score classes:** score bands for each rubric, rounding and floating-point edges, normalization to a common scale, bonus caps, per-criterion point enforcement, score floors, total validation, difficulty bands, and the edges between bands.
-- **5 tests in an inertness gate** that prove rewording a criterion cannot move a score, so editing how a criterion is phrased never changes a representative's result.
+- **5 tests in an inertness gate** that check that rewording a criterion cannot move a score, so editing how a criterion is phrased does not change a representative's result.
 
 They run in the Python CI job on every pull request and every push.
 
@@ -48,7 +48,7 @@ The live half is tested the way a representative uses it:
 - **Launch-day dry run:** 18 of 18 sessions passed on the new path.
 - **A detector for a model that goes silent, and a microphone check before each call.**
 - **Per-office go-live:** each office passes a scripted smoke test through the real product path before it opens.
-- **Pools and the busy screen:** admission to each realtime pool and the refusal once both are full were proven in a staging drill before the pools went live in production.
+- **Pools and the busy screen:** a staging drill showed Azure letting calls past a deployment's capacity and slowing them instead of refusing them, which is why the product decides admission to each realtime pool before a call starts and shows one busy screen once both are full.
 - **Deployments measured, not assumed:** scripted test calls measured the realtime model on both production deployments before the faster one became the primary pool, and a bake-off on scripted calls picked the transcription successor. See [architecture](architecture.md#capacity-two-pools-and-one-busy-screen).
 - **One voice per session:** the observer records the voice setting the realtime service reports for every conversation item, and a dashboard flags any session where it changed. See [D2](decisions/02-split-pipeline-and-one-voice-check.md).
 

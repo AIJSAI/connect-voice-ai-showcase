@@ -4,10 +4,10 @@ Connect is a real-time voice AI sales role-play platform. Its private repository
 
 | # | Decision | In one line |
 |---|----------|-------------|
-| [D1](01-first-voice-stack-and-direct-webrtc.md) | The first voice stack, and the move to a direct WebRTC connection | Start on a voice platform while the models mature; once Azure caught up, build the product's own WebRTC connection to Azure OpenAI, prove it on production traffic, then retire the platform |
-| [D2](02-split-pipeline-and-one-voice-check.md) | Split the voice pipeline, and check for one voice per session | When the model's own speech made a persona stop sounding like one person, take speaking away from the model, and check every session for a single voice |
-| [D3](03-grader-audit-and-drift-gate.md) | Audit the grader against the official rubrics, then gate every grader change | Realign the grader with the rubric owners, score only what a transcript shows, and make every later change replay reference calls before it can merge |
-| [D4](04-coaching-boundary.md) | The coaching boundary | Office-level trends for corporate coaching, never one representative's score, and a product designed to support the rule |
+| [D1](01-first-voice-stack-and-direct-webrtc.md) | The first voice stack, and the move to a direct WebRTC connection | Start on a voice platform while the realtime voice models mature; once they had matured on Azure OpenAI, build the product's own WebRTC connection to it, prove it on production traffic, then retire the platform |
+| [D2](02-split-pipeline-and-one-voice-check.md) | Split the voice pipeline, and check for one voice per session | In the first design, when the model's own speech made a persona stop sounding like one person, speaking was taken away from the model and every session was checked for a single voice; the split was retired in August 2026, and a narrower check carried over |
+| [D3](03-grader-audit-and-drift-gate.md) | Audit the grader against the official rubrics, then gate every grader change | Realign the grader with the rubric owners, score only what a transcript shows, and make every later change replay reference transcripts before it can merge |
+| [D4](04-coaching-boundary.md) | The coaching boundary | A policy worked out with the legal and employment teams: office-level trends for corporate coaching, never one representative's score. The product does not enforce it |
 
 The foundational choice, splitting the product into a live half and a grading half joined only through storage, is described in [architecture](../architecture.md#two-halves-joined-only-through-storage).
 

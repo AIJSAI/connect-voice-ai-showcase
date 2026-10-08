@@ -1,6 +1,6 @@
 # D4: The Coaching Boundary
 
-**Status**: In force. The rule was worked out with the company's legal and employment teams; the product design that carries it is mine.
+**Status**: In force as a policy, worked out with the company's legal and employment teams. The product's own design choices, listed below, are mine.
 
 ---
 
@@ -20,7 +20,7 @@ A practice tool that quietly turns into an evaluation tool would put the franchi
 
 **Terms of use.** I co-owned the terms of use, drafted with outside counsel and carrying a joint-employer statement. Each person accepts them once per version, inside the franchise portal.
 
-**A product shaped to the rule.** The design supports the rule rather than leaving it to memory alone:
+**Design choices consistent with the rule.** The product does not enforce the rule; these choices keep it a practice space:
 
 - **No scoreboard and no ranking.**
 - **The coaching report is written for the representative.** It quotes their own words back to them with one suggested focus.
@@ -32,7 +32,7 @@ A practice tool that quietly turns into an evaluation tool would put the franchi
 
 - **(+)** The product stays a practice space, consistent with the franchise model's legal lines.
 - **(+)** Office owners still see where to focus their staff's practice.
-- **(-)** The rule governs how scores are used, not who can read a report, so it depends on the coaches who hold to it as well as on the product.
+- **(-)** The rule governs how scores are used, not who can read a report. As the terms of use disclose, a copy of each report goes to a corporate training mailbox, so the rule depends on the coaches who hold to it.
 - **(-)** An automatic manager copy of an individual's report, and any recruiting or pre-hire use, wait on legal review before they are switched on.
 
 ---
