@@ -1,18 +1,18 @@
 # D3: Audit the Grader Against the Official Rubrics, Then Gate Every Grader Change
 
-**Status**: The realignment shipped in February 2026; the drift gate has been a required check since July 2026.
+**Status**: The realignment shipped in February 2026; the live replay below has been a required check since July 2026.
 
 ---
 
 ## Context
 
-The grader is the part of Connect, a real-time voice AI sales role-play platform, that a representative actually trusts or doesn't. A score only means something if it matches the rubric representatives are already held to: the company's official inside-sales and outside-sales rubrics.
+The grader is the part of Connect, a real-time voice AI sales role-play platform, that a representative has to trust. A score only means something if it matches the rubric representatives are already held to: the company's official inside-sales and outside-sales rubrics.
 
 In February 2026 I tested the AI grader against those rubrics, criterion by criterion, and it had drifted:
 
 - **Half the outside-sales criteria were missing,** ten of the twenty.
 - **Inside-sales empathy was weighted at double** what the rubric allowed.
-- **Five inside-sales criteria were missing.**
+- **Five criteria from the official inside-sales rubric were missing.**
 
 None of this showed up as an error. The grader returned confident, complete-looking scores against a rubric that was not the business's.
 
@@ -30,8 +30,8 @@ None of this showed up as an error. The grader returned confident, complete-look
 
 Two layers, one deterministic and one live:
 
-1. **The arithmetic is pinned.** 101 tests fix the scoring math across bands, rounding, normalization, bonus caps, point enforcement, floors, totals and difficulty bands; five of them form a gate that checks that rewording a criterion cannot move a score. They run on every pull request and every push.
-2. **The judgment is replayed (since July 2026).** A required check runs on every pull request. When grader content changes (prompts, scoring code, rubrics, schemas or eval fixtures), it replays fourteen reference transcripts across eight personas, three times each, against the live staging grader, and fails the merge if the mean score drifts beyond a per-transcript tolerance that widens with measured run-to-run noise above a fixed floor. Nine red-team cases, including prompt injection and score manipulation, must hold. The same check runs weekly, because a model can drift with no change on our side.
+1. **The arithmetic is pinned.** 101 tests fix the scoring math across bands, rounding, normalization, bonus caps, point enforcement, floors and totals, and the mapping to the difficulty label, which never changes a score; five of them form a gate that checks that rewording a criterion cannot move a score. They run on every pull request and every push.
+2. **The judgment is replayed (since July 2026).** A required check runs on every pull request. When grader content changes (prompts, scoring code, rubrics, schemas or eval fixtures), it replays fourteen reference transcripts across eight personas, three times each, against the live staging grader, and fails the merge if the mean score drifts beyond a per-transcript tolerance that widens with measured run-to-run noise above a fixed floor. The reference scores are the grader's own, recorded on staging in July 2026, so the gate catches any change from that baseline; agreement with human grades is what the report-only golden set will measure once those grades are final. A persona added after the baseline was recorded has no reference transcript yet. Nine red-team cases, including prompt injection and score manipulation, must hold. The same check runs weekly, because a model can drift with no change on our side.
 
 Details of both layers are in [testing](../testing.md) and [evals](../evals.md).
 
@@ -42,9 +42,9 @@ Hard personas are written to decline. Grading a hard call on whether the AI said
 ## Consequences
 
 - **(+)** Scores mirror the official rubric's structure, and the business's rubric owners approved the mapping.
-- **(+)** A change to the grader cannot merge on the strength of looking right; it has to reproduce the reference scores.
+- **(+)** A change to the grader cannot merge on the strength of looking right; it has to score within tolerance of the reference scores.
 - **(+)** Prompt injection and score manipulation are tested on every grader change, not assumed away.
-- **(-)** The live replay costs real model calls and time, so it runs only when grader content changes, plus a weekly run instead of a daily one.
+- **(-)** The live replay costs paid model calls and time, so it runs only when grader content changes, plus a weekly run instead of a daily one.
 - **(-)** Some dimensions (consistency, coaching quality, evidence grounding, a golden set) stay report-only until human grades are final, so today they inform rather than block.
 
 ---
