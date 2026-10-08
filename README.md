@@ -1,6 +1,6 @@
 # Connect
 
-> A real-time voice AI sales role-play platform. Sales representatives in a national in-home senior-care franchise network practice spoken calls against AI buyer personas, and a separate AI grader scores each finished call against the company's own sales rubric. I built it alone from its first commit in January 2026, then ran its pilots and much of the rollout.
+> A real-time voice AI sales role-play platform. Sales representatives in a 480+ location in-home senior-care franchise network practice spoken calls against AI buyer personas, and a separate AI grader scores each finished call against the company's own sales rubric. I built it alone from its first commit in January 2026, then ran its pilots and much of the rollout.
 
 ---
 
@@ -24,7 +24,7 @@ Franchise offices had been paying for outside role-play tools or role-playing wi
 
 1. **Latency.** A spoken conversation breaks when the other side pauses, so the buyer is built to answer within a one-second round trip.
 2. **Grading depth.** Scoring a transcript against a multi-category rubric takes a reasoning model about a minute. That cannot sit inside a conversation.
-3. **A regulated setting.** In-home senior care is HIPAA-regulated, and each franchise owner employs their own staff, so privacy and how a score may be used are design inputs.
+3. **A regulated setting.** In-home senior care is HIPAA-regulated, and each franchise owner employs their own staff. Privacy shaped the product's design; how corporate may use a score is set by a policy, described in [D4](docs/decisions/04-coaching-boundary.md).
 
 ## Architecture
 
@@ -60,8 +60,9 @@ flowchart LR
         SF[("Snowflake<br/>via Event Grid + Snowpipe")]
     end
 
-    Rep -->|start a call| Web
+    Rep -->|open a session,<br/>then begin the call| Web
     Web -->|admit to a pool,<br/>mint short-lived session| RT
+    Web -->|attach before<br/>audio flows| Obs
     Rep <-->|WebRTC audio,<br/>handshake relayed by server| RT
     Obs <-->|side channel: transcript,<br/>persona guard, voice setting| RT
     Obs -->|transcript at hang-up| Blob
@@ -84,14 +85,14 @@ flowchart LR
 | Component | What it does |
 |-----------|--------------|
 | **Web tier** | Served inside the franchise portal, behind the portal's single sign-on. Admits each call to a realtime pool, mints a short-lived session carrying the persona's instructions, and relays the WebRTC handshake; the browser never holds a key or sees the instructions |
-| **GPT realtime model** | Plays the buyer over a direct WebRTC audio connection, in a voice chosen per persona. Two deployments of the same model: the faster Data Zone deployment is the primary pool and a Global Standard deployment is the overflow. Live transcription has run on the transcription model's successor since October 2026 |
-| **Observer** | Joins every call over a server-side channel: captures the transcript that gets graded, re-asserts the persona if a browser tampers with the session, and records the voice setting the service reports |
+| **GPT Realtime 2.1** | Plays the buyer over a direct WebRTC audio connection, in a voice chosen per persona. Two deployments of the same model: the faster Data Zone deployment is the primary pool and a Global Standard deployment is the overflow. Live transcription has run on the transcription model's successor since October 2026 |
+| **Observer** | Joins every call over a server-side channel before any audio flows, and a call it cannot join does not start. It captures the transcript that gets graded, re-asserts the persona if a browser tampers with the session, and records the voice setting the service reports |
 | **Service Bus + grading worker** | Duplicates dropped, failures kept. A reasoning model on Azure OpenAI judges under a strict schema; code recomputes every total, bonus and band; calls spread over a pool of model deployments with failover |
 | **Outputs** | Coaching email, stored report, and an analytics record for office-level trends |
 
 The product runs on Azure, with every environment defined in Bicep; analytics land in Snowflake. Detail: [docs/architecture.md](docs/architecture.md).
 
-**Where it started.** Connect first ran on LiveKit, which carried the live audio while the realtime voice models matured. Once they had, and Azure offered generally available browser-direct WebRTC, I built the product's own WebRTC connection to Azure OpenAI to remove the dependency on a voice platform and its fees. Live calls moved onto it in August 2026, and the first stack was retired in September. The company now owns its scaling and pays no voice-platform fees.
+**Where it started.** Connect first ran on LiveKit, which carried the live audio while the realtime voice models matured. Once they had, and Azure offered generally available browser-direct WebRTC, I built the product's own WebRTC connection to Azure OpenAI to remove the dependency on a voice platform and its fees. Live calls moved onto it in August 2026, and the first stack was retired in September. The company now owns its scaling, within its own Azure quota, and pays no voice-platform fees.
 
 ## Key Decisions
 
@@ -109,8 +110,8 @@ The product runs on Azure, with every environment defined in Bicep; analytics la
 
 ## Quality and Testing
 
-- **The arithmetic is pinned.** 101 tests fix the scoring math, five of them in a gate that checks that rewording a criterion cannot move a score. They run on every pull request.
-- **Every grader change replays reference transcripts.** A required check grades fourteen reference transcripts three times each on the real staging grader and blocks the merge if scores drift beyond a noise-aware tolerance; nine red-team cases (prompt injection, score manipulation) must hold. It also runs weekly to catch drift in the model itself.
+- **The arithmetic is pinned.** 101 tests fix the scoring math, five of them in a gate that checks that rewording a criterion cannot move a score. They run on every pull request and every push.
+- **Every grader change replays reference transcripts.** A required check grades fourteen reference transcripts three times each on the live staging grader and blocks the merge if scores drift beyond a noise-aware tolerance; nine red-team cases (prompt injection, score manipulation) must hold. It also runs weekly to catch drift in the model itself.
 - **Hard calls are scored against their own goal.** Closing skill is judged against each persona's expected outcome rather than whether the AI agreed, the total is never curved, and the change went live only after eight of nine personas held within model noise.
 - **Every deploy is checked.** Staging first, then production behind three approval gates, only one of which moves traffic. Container images fail the build on any fixable high or critical vulnerability; an end-to-end grading smoke test runs on staging; the voice routes are smoke-tested after every deploy.
 - **Infrastructure before code.** A deploy is blocked until any infrastructure change it carries has been applied to both staging and production, and documentation-only merges deploy nothing.
@@ -125,14 +126,13 @@ Detail: [docs/testing.md](docs/testing.md) and [docs/evals.md](docs/evals.md).
 
 ## What I Learned
 
-- **Measure the platform, not its labels.** A staging drill showed that a unit of realtime capacity behaves as a rate, not a seat, and scripted test calls showed the same model answering faster on one deployment type than another. Both findings changed the design: admission is decided before a call starts, and the faster deployment carries live calls first.
-- **A grader is the product's credibility.** Auditing it once was not enough; every change now replays reference calls before it can merge.
-- **Score only what you can observe.** The inside-sales rubric was written for human mystery shoppers; points a transcript cannot show are not points a model should guess at.
-- **Model retirements are scheduled product risks.** Live transcription moved to its successor twelve days before the old model's retirement date, after a bake-off, and the grader's successor is ready behind shadow grading, a one-setting cutover and a dated check.
+- **Realtime capacity had to be measured.** A staging drill showed that a unit of realtime capacity behaves as a rate, not a seat, and scripted test calls showed the same model answering faster on one deployment type than another. Both findings changed the design: admission is decided before a call starts, and the faster deployment carries live calls first.
+- **One audit of the grader was not enough.** Representatives trust the product only as far as they trust its scores, so every grader change now replays reference transcripts before it can merge.
+- **The grader scores only what a transcript shows.** The inside-sales rubric was written for human mystery shoppers, and points a transcript cannot show are not points a model should guess at.
+- **Each model retirement is a scheduled product risk.** Live transcription moved to its successor twelve days before the old model's retirement date, after a bake-off, and the grader's successor is ready behind shadow grading, a one-setting cutover and a dated check.
 
 ## Roadmap
 
-- **Live customer calls.** I built and demoed a proof of concept for scoring live customer calls with Connect, not only practice calls; it has not been piloted and is on the 2027 roadmap.
 - **The grader's next model.** The grading model's named successor is deployed and switched off. Shadow grading is built so real reports can be compared side by side before the switch, which is one setting. A dated check, run both as an alert rule and as a daily scheduled job, goes red if any grade still runs on the current model from nine days before its retirement.
 - **Report-only evals** (consistency, coaching quality, evidence grounding, a golden set) become blocking once human grades are final.
 
@@ -147,7 +147,6 @@ Detail: [docs/testing.md](docs/testing.md) and [docs/evals.md](docs/evals.md).
 | Two realtime pools and the transcription successor, October 2026 | Done |
 | Grader successor | Deployed and switched off; a side-by-side comparison of real reports comes before the switch |
 | Rollout across the franchise network | In progress, in waves |
-| Live customer calls | Proof of concept built and demoed; on the 2027 roadmap |
 
 ---
 
