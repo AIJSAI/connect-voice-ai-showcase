@@ -6,9 +6,9 @@
 
 **This repository documents the architecture and design decisions for Connect. The implementation is private. No code, prompts, persona scripts, rubric text or data from it appear here; everything below is described in my own words.**
 
-[Portfolio](https://jamesshehan.dev)
+[Portfolio case study](https://jamesshehan.dev/projects/connect) · [Blog post](https://jamesshehan.dev/blog/building-connect-voice-ai-sales-role-play)
 
-Other showcases: [Ratify](https://github.com/AIJSAI/ratify-showcase) · [Vinny](https://github.com/AIJSAI/vinny-showcase) · [Hive](https://github.com/AIJSAI/hive-showcase)
+Other showcases: [Ratify](https://github.com/AIJSAI/ratify-showcase) · [Vinny](https://github.com/AIJSAI/vinny-showcase) · [Hive](https://github.com/AIJSAI/hive-showcase) · [On the Lees](https://github.com/AIJSAI/on-the-lees-showcase) · [Backyard](https://github.com/AIJSAI/backyard-showcase) · [The Chief](https://github.com/AIJSAI/operating-partner-showcase)
 
 ---
 
